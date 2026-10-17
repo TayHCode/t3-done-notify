@@ -1,0 +1,3 @@
+# One full T3 thread ID per line, or an unambiguous prefix of its final segment.
+# Replace this synthetic ID with a thread you want to watch.
+thread:project:example:example-thread

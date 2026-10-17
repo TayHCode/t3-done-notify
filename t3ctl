@@ -1,0 +1,233 @@
+#!/usr/bin/env python3
+"""Read-only adapter for the local T3 orchestration API."""
+from __future__ import annotations
+
+import argparse
+import asyncio
+import json
+import os
+import sys
+import urllib.error
+import urllib.parse
+import urllib.request
+
+try:
+    from websockets.asyncio.client import connect as WebSocketConnect
+except ImportError as exc:  # pragma: no cover - exercised by installation
+    raise SystemExit("t3ctl requires websockets>=15,<16; install requirements.txt") from exc
+
+
+HTTP_TIMEOUT = 15
+WEBSOCKET_OPEN_TIMEOUT = 15
+WEBSOCKET_CLOSE_TIMEOUT = 5
+RPC_TIMEOUT = 60
+
+
+class AdapterError(Exception):
+    """An error message safe to show without response data or credentials."""
+
+
+def base_url() -> str:
+    """Return a validated HTTP(S) base URL without exposing it in errors."""
+    value = os.environ.get("T3_URL", "http://localhost:3773").rstrip("/")
+    try:
+        parsed = urllib.parse.urlsplit(value)
+        valid = (parsed.scheme in ("http", "https") and bool(parsed.hostname)
+                 and parsed.username is None and parsed.password is None
+                 and not parsed.query and not parsed.fragment)
+        if not valid:
+            raise ValueError
+        # Validate malformed ports without putting the configured URL in an error.
+        _ = parsed.port
+    except ValueError:
+        raise AdapterError("invalid T3_URL configuration") from None
+    return value
+
+
+def token_file_path() -> str:
+    explicit = os.environ.get("T3_TOKEN_FILE")
+    if explicit:
+        return os.path.expanduser(explicit)
+    config_dir = os.environ.get("T3_DONE_CONFIG_DIR")
+    if config_dir:
+        return os.path.join(os.path.expanduser(config_dir), "t3-token")
+    config_home = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
+    return os.path.join(os.path.expanduser(config_home), "t3-done", "t3-token")
+
+
+def read_token() -> str:
+    try:
+        with open(token_file_path(), encoding="utf-8") as token_file:
+            value = token_file.read().strip()
+    except OSError:
+        raise AdapterError("T3 token file is unavailable; configure T3_TOKEN_FILE") from None
+    if not value:
+        raise AdapterError("T3 token file is empty")
+    return value
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def websocket_ticket() -> str:
+    endpoint = base_url() + "/api/auth/websocket-ticket"
+    request = urllib.request.Request(
+        endpoint,
+        data=b"{}",
+        method="POST",
+        headers={"Authorization": "Bearer " + read_token(),
+                 "Content-Type": "application/json"},
+    )
+    # Don't let ambient proxy settings or redirects forward the bearer token.
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), _NoRedirect())
+    try:
+        with opener.open(request, timeout=HTTP_TIMEOUT) as response:
+            payload = json.loads(response.read())
+    except urllib.error.HTTPError as exc:
+        status = exc.code
+        exc.close()
+        if 300 <= status < 400:
+            raise AdapterError("T3 ticket redirect refused") from None
+        if status == 401 or status == 403:
+            raise AdapterError("T3 authentication failed") from None
+        raise AdapterError(f"T3 ticket request failed (HTTP {status})") from None
+    except (urllib.error.URLError, TimeoutError, OSError):
+        raise AdapterError("T3 ticket request failed (network error)") from None
+    except (UnicodeDecodeError, json.JSONDecodeError, TypeError):
+        raise AdapterError("T3 ticket response was invalid") from None
+    ticket = payload.get("ticket") if isinstance(payload, dict) else None
+    if not isinstance(ticket, str) or not ticket:
+        raise AdapterError("T3 ticket response was invalid")
+    return ticket
+
+
+class _NoWebSocketRedirect(WebSocketConnect):
+    """Keep the ticket in the original handshake request only."""
+
+    def process_redirect(self, exc):
+        return exc
+
+
+class Rpc:
+    def __init__(self):
+        self.ws = None
+        self.next_id = 0
+
+    async def __aenter__(self):
+        parsed = urllib.parse.urlsplit(base_url())
+        scheme = "wss" if parsed.scheme == "https" else "ws"
+        ticket = await asyncio.to_thread(websocket_ticket)
+        query = urllib.parse.urlencode({
+            "wsTicket": ticket,
+            "orchestrationProtocol": "2",
+            "clientSurface": "cli",
+        })
+        uri = urllib.parse.urlunsplit((scheme, parsed.netloc, parsed.path.rstrip("/") + "/ws", query, ""))
+        self.ws = await _NoWebSocketRedirect(
+            uri,
+            max_size=None,
+            open_timeout=WEBSOCKET_OPEN_TIMEOUT,
+            close_timeout=WEBSOCKET_CLOSE_TIMEOUT,
+            proxy=None,
+        )
+        return self
+
+    async def __aexit__(self, exc_type, exc, traceback):
+        if self.ws is not None:
+            await self.ws.close()
+
+    async def _send(self, tag, payload):
+        self.next_id += 1
+        request_id = str(self.next_id)
+        frame = {"_tag": "Request", "id": request_id, "tag": tag,
+                 "payload": payload, "headers": []}
+        await self.ws.send(json.dumps(frame))
+        return request_id
+
+    async def call(self, tag, payload):
+        request_id = await self._send(tag, payload)
+        deadline = asyncio.get_running_loop().time() + RPC_TIMEOUT
+        while True:
+            remaining = deadline - asyncio.get_running_loop().time()
+            if remaining <= 0:
+                raise AdapterError("T3 request timed out")
+            raw = await asyncio.wait_for(self.ws.recv(), timeout=remaining)
+            frame = json.loads(raw)
+            if not isinstance(frame, dict):
+                raise AdapterError("T3 response was invalid")
+            if frame.get("_tag") == "Ping":
+                await self.ws.send(json.dumps({"_tag": "Pong"}))
+                continue
+            if frame.get("requestId") != request_id:
+                continue
+            if frame.get("_tag") == "Exit":
+                exit_value = frame.get("exit")
+                if isinstance(exit_value, dict) and exit_value.get("_tag") == "Success":
+                    return exit_value.get("value")
+                raise AdapterError("T3 request failed")
+            if frame.get("_tag") == "Chunk":
+                values = frame.get("values")
+                if not isinstance(values, list) or not values:
+                    raise AdapterError("T3 response was invalid")
+                await self.ws.send(json.dumps({"_tag": "Ack", "requestId": request_id}))
+                await self.ws.send(json.dumps({"_tag": "Interrupt", "requestId": request_id}))
+                return values[0]
+
+
+async def shell_snapshot():
+    async with Rpc() as rpc:
+        result = await rpc.call("orchestration.subscribeShell", {})
+    if not isinstance(result, dict) or not isinstance(result.get("snapshot"), dict):
+        raise AdapterError("T3 shell response was invalid")
+    snapshot = result["snapshot"]
+    if not isinstance(snapshot.get("threads"), list):
+        raise AdapterError("T3 shell response was invalid")
+    return snapshot
+
+
+async def thread_projection(thread_id: str):
+    async with Rpc() as rpc:
+        return await rpc.call("orchestration.getThreadProjection", {"threadId": thread_id})
+
+
+def cmd_lanes(args):
+    snapshot = asyncio.run(shell_snapshot())
+    rows = [thread for thread in snapshot["threads"]
+            if not thread.get("deletedAt")
+            and (args.include_archived or not thread.get("archivedAt"))]
+    print(json.dumps(rows, ensure_ascii=False))
+
+
+def cmd_thread(args):
+    projection = asyncio.run(thread_projection(args.thread_id))
+    print(json.dumps(projection, ensure_ascii=False))
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(prog="t3ctl")
+    commands = parser.add_subparsers(dest="command", required=True)
+    lanes = commands.add_parser("lanes", help="list undeleted threads")
+    lanes.add_argument("--include-archived", action="store_true")
+    lanes.add_argument("--json", action="store_true", required=True)
+    lanes.set_defaults(run=cmd_lanes)
+    thread = commands.add_parser("thread", help="read a thread by exact id")
+    thread.add_argument("thread_id")
+    thread.add_argument("--json", action="store_true", required=True)
+    thread.set_defaults(run=cmd_thread)
+    args = parser.parse_args(argv)
+    try:
+        args.run(args)
+    except AdapterError as exc:
+        print(f"t3ctl: {exc}", file=sys.stderr)
+        return 1
+    except Exception as exc:
+        # Network and library exception strings may contain credentials or URLs.
+        print(f"t3ctl: request failed ({type(exc).__name__})", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

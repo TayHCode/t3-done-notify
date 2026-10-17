@@ -1,0 +1,15 @@
+[Unit]
+Description=Notify when watched T3 Code threads need attention
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/share/t3-done-notify/.venv/bin/python %h/.local/share/t3-done-notify/t3_done_notify.py
+Restart=on-failure
+RestartSec=10
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

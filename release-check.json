@@ -1,0 +1,67 @@
+{
+  "exclude": [],
+  "approvals": [],
+  "dependency_licenses": {
+    "websockets": {
+      "version": "15.0.1",
+      "spdx": "BSD-3-Clause",
+      "sha256": "3d6a0c050d8bec52fabad502e45fb25bd02bcadbd70dea34d447b6a0ff4e6da8"
+    }
+  },
+  "quickstart": [
+    {
+      "file": "README.md",
+      "line": 212,
+      "argv": [
+        "python3",
+        "-m",
+        "pip",
+        "install",
+        "-r",
+        "requirements.txt"
+      ]
+    },
+    {
+      "file": "README.md",
+      "line": 213,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-q"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "role": "build",
+      "file": "CONTRIBUTING.md",
+      "line": 6,
+      "argv": [
+        "python3",
+        "-m",
+        "pip",
+        "install",
+        "-r",
+        "requirements.txt"
+      ]
+    },
+    {
+      "role": "tests",
+      "file": "CONTRIBUTING.md",
+      "line": 7,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-q"
+      ]
+    }
+  ]
+}

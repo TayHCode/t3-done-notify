@@ -1,0 +1,10 @@
+name: Feature request
+description: Suggest an improvement.
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What do you need the notifier to do?
+      description: Use neutral examples and no private details.
+    validations:
+      required: true

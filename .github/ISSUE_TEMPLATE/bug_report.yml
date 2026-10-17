@@ -1,0 +1,19 @@
+name: Bug report
+description: Report a reproducible problem.
+body:
+  - type: markdown
+    attributes:
+      value: Do not include tokens, webhook URLs or keys, host names or private paths.
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps, command and redacted output
+      description: Include your Python and T3 versions. Remove private details before sharing.
+    validations:
+      required: true
