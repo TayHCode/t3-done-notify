@@ -16,7 +16,10 @@ The installer asks for two values, `WEBHOOK_URL` and `WEBHOOK_KEY`, then asks
 which of T3 Code, Claude Code, and Codex you run. Any combination is fine,
 including all three. It asks only for what the agents you picked need: T3 Code
 still needs `T3_URL` and a read-only token. Claude Code and Codex use the
-session files those tools already write.
+session files those tools already write. When `CLAUDE_PROJECTS_DIR` or
+`CODEX_SESSIONS_DIR` is set, the installer saves that path in the env file
+and the user service. A later run keeps the saved path if the variable is
+unset.
 
 It saves the env file in `${XDG_CONFIG_HOME:-~/.config}/t3-done` (mode 600)
 and starts a background user service: systemd on Linux, launchd on macOS. Run `./install.sh` again to change
@@ -69,11 +72,14 @@ reads the token from the token file, not from the env file.
 - Sends one POST for one session end. A later poll of the same completion does
   not queue another. Codex rollouts that share a thread id are one session.
 
-A session first observed already stopped is not a new completion. For T3, add
-the thread to the watch list before its next run. A "done" event means stopped,
-not necessarily successful: waiting, idle, cancelled, and interrupted statuses
-also qualify. An open turn that is already older than the stall window is
-reported once when the watcher first sees it.
+Claude Code and Codex remember each session file by its path, modification
+time, and size. Files already finished when that index is first written are
+not new completions. A file that appears or grows between polls is recorded
+even when the session has already stopped, and it still waits out the debounce
+before one POST. For T3, add the thread to the watch list before its next run.
+A "done" event means stopped, not necessarily successful: waiting, idle,
+cancelled, and interrupted statuses also qualify. An open turn that is already
+older than the stall window is reported once when the watcher first sees it.
 
 ## Requirements and compatibility
 
@@ -131,9 +137,12 @@ changing configuration. The T3 watch list is reread each poll.
   read-only bearer token, not the webhook key.
 - `CLAUDE_PROJECTS_DIR`: Claude Code transcript root. Default
   `~/.claude/projects`, or `$CLAUDE_CONFIG_DIR/projects` when
-  `CLAUDE_CONFIG_DIR` is set.
+  `CLAUDE_CONFIG_DIR` is set. The installer saves this in the env file and the
+  user service when it is set, and keeps the saved path on a later run when
+  the variable is unset.
 - `CODEX_SESSIONS_DIR`: Codex rollout root. Default `~/.codex/sessions`, or
-  `$CODEX_HOME/sessions` when `CODEX_HOME` is set.
+  `$CODEX_HOME/sessions` when `CODEX_HOME` is set. The installer saves and
+  keeps it the same way as `CLAUDE_PROJECTS_DIR`.
 - `WEBHOOK_URL` and `WEBHOOK_KEY`: unset by default. `KEY` is accepted as a legacy
   alias for `WEBHOOK_KEY`; prefer the explicit name for new setups.
 
@@ -147,10 +156,11 @@ bundled client as well as configuring the notifier.
 
 `./install.sh` installs and starts the service. On Linux it copies
 `t3-done-notify.service` to `~/.config/systemd/user/`, writes a drop-in that
-sets `T3_DONE_CONFIG_DIR`, and runs `systemctl --user enable` and `restart`.
-On macOS it writes `~/Library/LaunchAgents/com.t3-done-notify.plist` and loads
-it with `launchctl`. Re-running the installer restarts the same service rather
-than starting a second copy.
+sets `T3_DONE_CONFIG_DIR` and any saved `CLAUDE_PROJECTS_DIR` or
+`CODEX_SESSIONS_DIR`, and runs `systemctl --user enable` and `restart`.
+On macOS it writes `~/Library/LaunchAgents/com.t3-done-notify.plist` with
+those variables and loads it with `launchctl`. Re-running the installer
+restarts the same service rather than starting a second copy.
 
 The program reads its env file itself; the unit does not source it. User-manager
 environments may differ from your interactive shell. This unit does not change

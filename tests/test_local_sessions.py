@@ -23,6 +23,12 @@ def write_jsonl(path, rows, torn=False):
             handle.write('{"type":"assistant","message":\n')
 
 
+def append_jsonl(path, rows):
+    with open(path, "a", encoding="utf-8") as handle:
+        for row in rows:
+            handle.write(json.dumps(row) + "\n")
+
+
 def claude_row(kind, session_id, timestamp, **extra):
     row = {"type": kind, "sessionId": session_id, "timestamp": timestamp}
     row.update(extra)
@@ -566,6 +572,173 @@ class WatcherPostTests(unittest.TestCase):
                 self.assertEqual(server.auth, "Bearer local-test-key")
                 self.assertNotIn("FIRST_SEEN_SHOULD_NOT_POST", json.dumps(received))
                 self.assertNotIn("SUBAGENT_SHOULD_NOT_POST", json.dumps(received))
+        finally:
+            server.shutdown()
+            worker.join()
+            server.server_close()
+
+    def test_session_finished_between_polls_posts_once(self):
+        received = []
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):
+                received.append(json.loads(self.rfile.read(int(self.headers["Content-Length"]))))
+                self.send_response(204)
+                self.end_headers()
+
+            def log_message(self, *_):
+                pass
+
+        server = http.server.HTTPServer(("localhost", 0), Handler)
+        worker = threading.Thread(target=server.serve_forever, daemon=True)
+        worker.start()
+        try:
+            with tempfile.TemporaryDirectory() as directory:
+                claude_root = os.path.join(directory, "claude")
+                codex_root = os.path.join(directory, "codex")
+                project = os.path.join(claude_root, "-tmp-example")
+                env = {
+                    "WEBHOOK_URL": f"http://localhost:{server.server_port}/hook",
+                    "WEBHOOK_KEY": "local-test-key",
+                }
+                config = isolated_config(directory, {
+                    "T3_DONE_SOURCES": "claude,codex",
+                    "CLAUDE_PROJECTS_DIR": claude_root,
+                    "CODEX_SESSIONS_DIR": codex_root,
+                    "T3_DONE_DEBOUNCE_SECONDS": "0",
+                    **env,
+                })
+                state_path = os.path.join(directory, "state.json")
+                daybook = os.path.join(directory, "daybook")
+                state = {}
+                now = 1_800_000_000
+                recent = "2026-10-15T12:00:00Z"
+                ancient_claude = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4"
+                ancient_codex = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb4"
+                short_claude = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5"
+                short_codex = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb5"
+                grown = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa6"
+                ancient_claude_path = os.path.join(project, ancient_claude + ".jsonl")
+                grown_path = os.path.join(project, grown + ".jsonl")
+                ancient_codex_path = os.path.join(
+                    codex_root, "2026", "10", "14",
+                    "rollout-2026-10-14T12-00-00-" + ancient_codex + ".jsonl",
+                )
+
+                def poll(at):
+                    notify.poll_local_sessions(
+                        state,
+                        now=at,
+                        env=env,
+                        save_path=state_path,
+                        daybook_dir=daybook,
+                        config=config,
+                    )
+
+                def posted_ids():
+                    return [item["thread_id"] for item in received]
+
+                write_jsonl(ancient_claude_path, [
+                    claude_prompt(ancient_claude, recent, "Old session"),
+                    claude_assistant(
+                        ancient_claude, recent, "Could you review the old session?", "end_turn"
+                    ),
+                ])
+                write_jsonl(ancient_codex_path, [
+                    codex_meta(ancient_codex, recent),
+                    codex_line(recent, "event_msg", {
+                        "type": "task_complete",
+                        "turn_id": "turn-1",
+                        "last_agent_message": "Could you review the old session?",
+                    }),
+                ])
+                write_jsonl(grown_path, [
+                    claude_prompt(grown, recent, "Baseline"),
+                    claude_assistant(grown, recent, "Already finished.", "end_turn"),
+                ])
+
+                poll(now)
+                self.assertEqual(received, [])
+                self.assertNotIn(ancient_claude, state)
+                self.assertNotIn(ancient_codex, state)
+                self.assertNotIn(grown, state)
+                for path in (ancient_claude_path, ancient_codex_path, grown_path):
+                    recorded = state["_files"][path]
+                    self.assertEqual(recorded["offset"], os.path.getsize(path))
+                    self.assertEqual(recorded["mtime_ns"], os.stat(path).st_mtime_ns)
+                poll(now + 1)
+                self.assertEqual(received, [])
+                self.assertNotIn(grown, state)
+
+                write_jsonl(os.path.join(project, short_claude + ".jsonl"), [
+                    claude_row(
+                        "custom-title", short_claude, recent, customTitle="Short review"
+                    ),
+                    claude_prompt(short_claude, recent, "Please review"),
+                    claude_assistant(
+                        short_claude, "2026-10-15T12:01:00Z",
+                        "Could you approve the result?", "end_turn",
+                    ),
+                ])
+                short_codex_path = os.path.join(
+                    codex_root, "2026", "10", "15",
+                    "rollout-2026-10-15T12-01-00-" + short_codex + ".jsonl",
+                )
+                write_jsonl(short_codex_path, [
+                    codex_meta(short_codex, "2026-10-15T12:01:00Z"),
+                    codex_user("2026-10-15T12:01:00Z", "Run the tests"),
+                    codex_line("2026-10-15T12:01:01Z", "event_msg", {
+                        "type": "task_complete",
+                        "turn_id": "turn-1",
+                        "last_agent_message": None,
+                        "error": {
+                            "message": "usage limit exceeded",
+                            "codex_error_info": "usage_limit_exceeded",
+                        },
+                    }),
+                ])
+                append_jsonl(grown_path, [
+                    claude_prompt(grown, "2026-10-15T12:02:00Z", "One more pass"),
+                    claude_assistant(
+                        grown, "2026-10-15T12:02:01Z",
+                        "Could you approve the grown result?", "end_turn",
+                    ),
+                ])
+
+                poll(now + 2)
+                self.assertEqual(received, [])
+                self.assertTrue(state[short_claude]["active"])
+                self.assertIsNotNone(state[short_claude]["pending_since"])
+                self.assertTrue(state[short_codex]["active"])
+                self.assertTrue(state[grown]["active"])
+                poll(now + 3)
+                keys = sorted(
+                    (item["source"], item["reason"], item["thread_id"]) for item in received
+                )
+                self.assertEqual(keys, sorted([
+                    ("claude", "done", short_claude),
+                    ("codex", "error", short_codex),
+                    ("claude", "done", grown),
+                ]))
+                by_id = {item["thread_id"]: item for item in received}
+                self.assertEqual(by_id[short_claude]["last_message"], "Could you approve the result?")
+                self.assertEqual(by_id[short_claude]["title"], "Short review")
+                self.assertEqual(by_id[short_codex]["status"], "failed")
+                self.assertEqual(by_id[short_codex]["last_message"], "usage limit exceeded")
+                self.assertEqual(
+                    by_id[grown]["last_message"], "Could you approve the grown result?"
+                )
+                grown_record = state["_files"][grown_path]
+                self.assertEqual(grown_record["offset"], os.path.getsize(grown_path))
+                self.assertEqual(grown_record["mtime_ns"], os.stat(grown_path).st_mtime_ns)
+                poll(now + 4)
+                self.assertEqual(posted_ids().count(short_claude), 1)
+                self.assertEqual(posted_ids().count(short_codex), 1)
+                self.assertEqual(posted_ids().count(grown), 1)
+                self.assertNotIn(ancient_claude, posted_ids())
+                self.assertNotIn(ancient_codex, posted_ids())
+                self.assertNotIn("Could you review the old session?", json.dumps(received))
+                self.assertNotIn("Already finished.", json.dumps(received))
         finally:
             server.shutdown()
             worker.join()

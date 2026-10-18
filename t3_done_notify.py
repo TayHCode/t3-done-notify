@@ -850,23 +850,67 @@ def _read_session(path, parser):
         return None
 
 
-def _remember_session(found, parsed):
-    if not parsed or not parsed.get("id"):
-        return
-    current = found.get(parsed["id"])
-    found[parsed["id"]] = parsed if current is None else _newer_session(current, parsed)
+def _read_stable_session(path, parser):
+    """Read a session file and the size and mtime from before that read.
+
+    A file that changes while it is being read is left for the next poll, so
+    the stored offset is never ahead of the bytes that were parsed.
+    """
+    try:
+        before = os.stat(path)
+    except OSError:
+        print("session read failed", flush=True)
+        return ("missing",)
+    parsed = _read_session(path, parser)
+    try:
+        after = os.stat(path)
+    except OSError:
+        print("session read failed", flush=True)
+        return ("missing",)
+    if after.st_mtime_ns != before.st_mtime_ns or after.st_size != before.st_size:
+        return ("unstable",)
+    return ("ok", parsed, {
+        "path": path,
+        "mtime_ns": before.st_mtime_ns,
+        "offset": before.st_size,
+    })
 
 
-def claude_session_threads(root):
-    """Top-level project transcripts only. Nested JSONL files are subagents, not sessions."""
+def _scan_sessions(paths, parser):
     found = {}
+    loose = []
+    unstable = []
+    for path in paths:
+        outcome = _read_stable_session(path, parser)
+        if outcome[0] == "unstable":
+            unstable.append(path)
+            continue
+        if outcome[0] != "ok":
+            continue
+        parsed, signature = outcome[1], outcome[2]
+        if not parsed or not parsed.get("id"):
+            loose.append(signature)
+            continue
+        session_id = parsed["id"]
+        current = found.get(session_id)
+        if current is None:
+            found[session_id] = {"thread": parsed, "files": [signature]}
+            continue
+        current["files"].append(signature)
+        current["thread"] = _newer_session(current["thread"], parsed)
+    return list(found.values()), loose, unstable
+
+
+def _claude_paths(root):
+    """Top-level project transcripts only. Nested JSONL files are subagents, not sessions."""
+    paths = []
     if not root or not os.path.isdir(root):
-        return []
+        return paths
     try:
         projects = list(os.scandir(root))
     except OSError:
         print("session read failed", flush=True)
-        return []
+        return paths
     for project in projects:
         try:
             if not project.is_dir(follow_symlinks=False):
@@ -884,26 +928,105 @@ def claude_session_threads(root):
                     continue
             except OSError:
                 continue
-            _remember_session(found, _read_session(entry.path, parse_claude_session))
-    return list(found.values())
+            paths.append(entry.path)
+    return paths
 
 
-def codex_session_threads(root):
+def _codex_paths(root):
     """Dated rollout files. Compressed ``.jsonl.zst`` archives are left unread."""
-    found = {}
+    paths = []
     if not root or not os.path.isdir(root):
-        return []
+        return paths
 
     def walk_error(_error):
         print("session read failed", flush=True)
 
     for dirpath, _dirnames, filenames in os.walk(root, onerror=walk_error):
         for name in filenames:
-            if not (name.startswith("rollout-") and name.endswith(".jsonl")):
-                continue
-            path = os.path.join(dirpath, name)
-            _remember_session(found, _read_session(path, parse_codex_session))
-    return list(found.values())
+            if name.startswith("rollout-") and name.endswith(".jsonl"):
+                paths.append(os.path.join(dirpath, name))
+    return paths
+
+
+def _claude_scan(root):
+    return _scan_sessions(_claude_paths(root), parse_claude_session)
+
+
+def _codex_scan(root):
+    return _scan_sessions(_codex_paths(root), parse_codex_session)
+
+
+def claude_session_threads(root):
+    """Top-level project transcripts only. Nested JSONL files are subagents, not sessions."""
+    observations, _loose, _unstable = _claude_scan(root)
+    return [item["thread"] for item in observations]
+
+
+def codex_session_threads(root):
+    """Dated rollout files. Compressed ``.jsonl.zst`` archives are left unread."""
+    observations, _loose, _unstable = _codex_scan(root)
+    return [item["thread"] for item in observations]
+
+
+def _signature_changed(previous, signature):
+    if not isinstance(previous, dict):
+        return True
+    return (
+        previous.get("mtime_ns") != signature["mtime_ns"]
+        or previous.get("offset") != signature["offset"]
+    )
+
+
+def _index_entry(signature, session_id):
+    return {
+        "mtime_ns": signature["mtime_ns"],
+        "offset": signature["offset"],
+        "id": session_id,
+    }
+
+
+def _track_files(state, observations, loose, unstable):
+    """Remember each file's mtime and byte offset. The first index is a baseline."""
+    previous_index = state.get("_files")
+    seeding = not isinstance(previous_index, dict)
+    if seeding:
+        previous_index = {}
+    seen = {}
+    changed = set()
+    for item in observations:
+        session_id = item["thread"]["id"]
+        session_changed = False
+        for signature in item["files"]:
+            seen[signature["path"]] = _index_entry(signature, session_id)
+            if _signature_changed(previous_index.get(signature["path"]), signature):
+                session_changed = True
+        if session_changed:
+            changed.add(session_id)
+    for signature in loose:
+        seen[signature["path"]] = _index_entry(signature, "")
+    for path in unstable:
+        previous = previous_index.get(path)
+        if isinstance(previous, dict):
+            seen[path] = previous
+    state["_files"] = seen
+    return seeding, changed
+
+
+def _discover_observations(config):
+    observations = []
+    loose = []
+    unstable = []
+    if "claude" in config.sources:
+        found, extra, pending = _claude_scan(config.claude_projects_dir)
+        observations.extend(found)
+        loose.extend(extra)
+        unstable.extend(pending)
+    if "codex" in config.sources:
+        found, extra, pending = _codex_scan(config.codex_sessions_dir)
+        observations.extend(found)
+        loose.extend(extra)
+        unstable.extend(pending)
+    return observations, loose, unstable
 
 
 def poll_local_sessions(
@@ -916,27 +1039,47 @@ def poll_local_sessions(
     config=None,
     dry_run=False,
 ):
-    """Apply Claude Code and Codex transcripts through the T3 transition rules."""
+    """Apply Claude Code and Codex transcripts through the T3 transition rules.
+
+    Discovered files are indexed by path, mtime, and size. Files already
+    finished when that index is first written are not new completions. A file
+    that appears or grows on a later poll is, including a session that started
+    and finished between polls. Passing ``sessions`` skips the index and keeps
+    the rule that a first-seen stopped session is ignored.
+    """
     config = load_config() if config is None else config
     now = time.time() if now is None else now
     environment = config.environment if env is None else env
     validate_webhook(environment)
     save_path = config.state_file if save_path is None else save_path
     daybook_dir = config.daybook_dir if daybook_dir is None else daybook_dir
-    if sessions is None:
-        sessions = []
-        if "claude" in config.sources:
-            sessions.extend(claude_session_threads(config.claude_projects_dir))
-        if "codex" in config.sources:
-            sessions.extend(codex_session_threads(config.codex_sessions_dir))
+    use_index = sessions is None
+    seeding = False
+    changed = set()
+    if use_index:
+        observations, loose, unstable = _discover_observations(config)
+        sessions = [item["thread"] for item in observations]
+        seeding, changed = _track_files(state, observations, loose, unstable)
+    committed = False
     try:
         for thread in sessions:
             thread_id = thread["id"]
             previous_record = state.get(thread_id)
-            # A session first seen already stopped is not a new completion.
-            if previous_record is None and not active(thread):
-                continue
-            record = copy.deepcopy(previous_record) if isinstance(previous_record, dict) else {}
+            tracked = isinstance(previous_record, dict)
+            if not tracked and not active(thread):
+                if not use_index or seeding or thread_id not in changed:
+                    continue
+                record = {"active": True}
+            else:
+                record = copy.deepcopy(previous_record) if tracked else {}
+                if (
+                    use_index
+                    and not seeding
+                    and thread_id in changed
+                    and not active(thread)
+                    and not record.get("active")
+                ):
+                    record = {"active": True}
             payload = transition(
                 record,
                 thread,
@@ -949,9 +1092,12 @@ def poll_local_sessions(
             _commit_observation(
                 state, record, thread_id, payload, now, save_path, daybook_dir
             )
+            committed = True
     except Exception:
         flush_outbox(state, environment, now, save_path, dry_run=dry_run)
         raise
+    if use_index and not committed:
+        save_state(state, save_path)
     return flush_outbox(state, environment, now, save_path, dry_run=dry_run)
 
 

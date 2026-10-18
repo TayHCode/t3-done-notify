@@ -11,6 +11,9 @@
 # Requires WEBHOOK_URL, WEBHOOK_KEY, and T3_DONE_SOURCES.
 # When sources include t3, also requires T3_URL and either T3_TOKEN_FILE
 # or T3_TOKEN (token text; written to the token file, not the env file).
+# CLAUDE_PROJECTS_DIR and CODEX_SESSIONS_DIR, when set, are saved into the
+# env file and the user service. A later run keeps a saved path when the
+# variable is unset.
 #
 # Re-running updates the env file, refreshes the program, and restarts the
 # service. Existing state, daybook, and watch.txt are left in place.
@@ -182,6 +185,32 @@ absolute_path() {
   printf '%s/%s' "$directory" "$(basename "$target")"
 }
 
+normalize_dir() {
+  raw=$1
+  one_line "$raw" >/dev/null || return 1
+  case "$raw" in
+    *\"*|*\'*) return 1 ;;
+  esac
+  case "$raw" in
+    "~") raw=$HOME ;;
+    "~/"*) raw="$HOME/${raw#"~/"}" ;;
+  esac
+  case "$raw" in
+    /*) printf '%s' "$raw" ;;
+    *) printf '%s/%s' "$(pwd)" "$raw" ;;
+  esac
+}
+
+resolve_saved_dir() {
+  key=$1
+  current=$2
+  if [ -n "$current" ]; then
+    normalize_dir "$current" || return 1
+  else
+    env_value "$env_file" "$key" || true
+  fi
+}
+
 xml_escape() {
   printf '%s' "$1" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'
 }
@@ -192,7 +221,20 @@ write_launchd_plist() {
   script=$3
   config=$4
   log_dir=$5
+  claude_dir=${6-}
+  codex_dir=${7-}
   mkdir -p "$(dirname "$dest")" "$log_dir"
+  session_env_xml=
+  if [ -n "$claude_dir" ]; then
+    session_env_xml="${session_env_xml}    <key>CLAUDE_PROJECTS_DIR</key>
+    <string>$(xml_escape "$claude_dir")</string>
+"
+  fi
+  if [ -n "$codex_dir" ]; then
+    session_env_xml="${session_env_xml}    <key>CODEX_SESSIONS_DIR</key>
+    <string>$(xml_escape "$codex_dir")</string>
+"
+  fi
   cat > "$dest" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -215,7 +257,7 @@ write_launchd_plist() {
     <string>$(xml_escape "$HOME")</string>
     <key>T3_DONE_CONFIG_DIR</key>
     <string>$(xml_escape "$config")</string>
-  </dict>
+$session_env_xml  </dict>
   <key>StandardOutPath</key>
   <string>$(xml_escape "$log_dir/notify.log")</string>
   <key>StandardErrorPath</key>
@@ -305,6 +347,13 @@ one_line "$webhook_url" || die "WEBHOOK_URL must be a single line"
 one_line "$webhook_key" || die "WEBHOOK_KEY must be a single line"
 [ -n "$webhook_key" ] || die "WEBHOOK_KEY is required"
 
+if ! claude_projects_dir=$(resolve_saved_dir CLAUDE_PROJECTS_DIR "${CLAUDE_PROJECTS_DIR:-}"); then
+  die "CLAUDE_PROJECTS_DIR must be a single path without quotes or newlines"
+fi
+if ! codex_sessions_dir=$(resolve_saved_dir CODEX_SESSIONS_DIR "${CODEX_SESSIONS_DIR:-}"); then
+  die "CODEX_SESSIONS_DIR must be a single path without quotes or newlines"
+fi
+
 t3_url=
 token_file_setting=
 token_to_write=
@@ -388,15 +437,27 @@ else
   unset_env_key "$env_file" T3_URL
   unset_env_key "$env_file" T3_TOKEN_FILE
 fi
+if [ -n "$claude_projects_dir" ]; then
+  set_env_key "$env_file" CLAUDE_PROJECTS_DIR "$claude_projects_dir"
+fi
+if [ -n "$codex_sessions_dir" ]; then
+  set_env_key "$env_file" CODEX_SESSIONS_DIR "$codex_sessions_dir"
+fi
 chmod 600 "$env_file"
 
 unit_dir="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
 mkdir -p "$unit_dir/t3-done-notify.service.d"
 install -m 644 "$root/t3-done-notify.service" "$unit_dir/t3-done-notify.service"
-cat > "$unit_dir/t3-done-notify.service.d/config.conf" <<EOF
-[Service]
-Environment="T3_DONE_CONFIG_DIR=$config_dir"
-EOF
+{
+  printf '%s\n' "[Service]"
+  printf 'Environment="%s=%s"\n' T3_DONE_CONFIG_DIR "$config_dir"
+  if [ -n "$claude_projects_dir" ]; then
+    printf 'Environment="%s=%s"\n' CLAUDE_PROJECTS_DIR "$claude_projects_dir"
+  fi
+  if [ -n "$codex_sessions_dir" ]; then
+    printf 'Environment="%s=%s"\n' CODEX_SESSIONS_DIR "$codex_sessions_dir"
+  fi
+} > "$unit_dir/t3-done-notify.service.d/config.conf"
 chmod 644 "$unit_dir/t3-done-notify.service.d/config.conf"
 
 log_dir="${XDG_STATE_HOME:-$HOME/.local/state}/t3-done"
@@ -404,7 +465,8 @@ mkdir -p "$log_dir"
 plist="$HOME/Library/LaunchAgents/com.t3-done-notify.plist"
 os_name=$(uname -s)
 if [ "$os_name" = "Darwin" ]; then
-  write_launchd_plist "$plist" "$python" "$script" "$config_dir" "$log_dir"
+  write_launchd_plist "$plist" "$python" "$script" "$config_dir" "$log_dir" \
+    "$claude_projects_dir" "$codex_sessions_dir"
 fi
 
 if [ "$no_service" -eq 0 ]; then
