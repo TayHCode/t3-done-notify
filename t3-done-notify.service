@@ -1,5 +1,5 @@
 [Unit]
-Description=Notify when watched T3 Code threads need attention
+Description=Notify when watched T3, Claude Code, or Codex sessions need attention
 After=network-online.target
 
 [Service]

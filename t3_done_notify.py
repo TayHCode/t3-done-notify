@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Poll t3ctl for watched threads and notify a configured webhook."""
+"""Watch T3 Code threads, Claude Code sessions, and Codex sessions."""
 
 import argparse
 import copy
 import datetime as dt
+import hashlib
 import json
 import math
 import os
@@ -26,6 +27,9 @@ STOPPED_STATUSES = {
     "completed", "failed", "cancelled", "canceled", "interrupted", "idle", "waiting"
 }
 RETRY_DELAYS = (1, 2, 4, 8)
+SOURCE_NAMES = ("t3", "claude", "codex")
+SESSION_TAIL_BYTES = 16384
+RECENT_LOCAL_COMPLETIONS = 2048
 ATTENTION_PATTERN = re.compile(
     r"\b(blocked|approval|approve|permission|need(?:s)? (?:you|someone)|"
     r"please (?:confirm|approve)|yes/no|(?:can|could|would) you)\b|\?",
@@ -46,6 +50,9 @@ class Config:
     debounce_seconds: float
     stall_seconds: float
     t3ctl_timeout_seconds: float
+    sources: tuple
+    claude_projects_dir: str
+    codex_sessions_dir: str
     environment: dict
 
 
@@ -81,6 +88,53 @@ def read_env(path):
         if key:
             values[key] = value.strip().strip("\"'")
     return values
+
+
+def _sources(environment):
+    raw = environment.get("T3_DONE_SOURCES")
+    if raw is None or not str(raw).strip():
+        return ("t3",)
+    names = []
+    for part in re.split(r"[\s,]+", str(raw).strip()):
+        name = part.strip().lower()
+        if not name:
+            continue
+        if name not in SOURCE_NAMES:
+            raise ValueError("invalid T3_DONE_SOURCES")
+        if name not in names:
+            names.append(name)
+    if not names:
+        raise ValueError("invalid T3_DONE_SOURCES")
+    return tuple(names)
+
+
+def _configured_path(environment, name):
+    value = environment.get(name)
+    if value is None or not str(value).strip():
+        return ""
+    return _expand_path(str(value).strip())
+
+
+def _claude_projects_dir(environment):
+    """Claude Code session root: ~/.claude/projects, or $CLAUDE_CONFIG_DIR/projects."""
+    explicit = _configured_path(environment, "CLAUDE_PROJECTS_DIR")
+    if explicit:
+        return explicit
+    config_dir = _configured_path(environment, "CLAUDE_CONFIG_DIR")
+    if config_dir:
+        return os.path.join(config_dir, "projects")
+    return _expand_path("~/.claude/projects")
+
+
+def _codex_sessions_dir(environment):
+    """Codex rollout root: ~/.codex/sessions, or $CODEX_HOME/sessions."""
+    explicit = _configured_path(environment, "CODEX_SESSIONS_DIR")
+    if explicit:
+        return explicit
+    home = _configured_path(environment, "CODEX_HOME")
+    if home:
+        return os.path.join(home, "sessions")
+    return _expand_path("~/.codex/sessions")
 
 
 def validate_webhook(environment):
@@ -141,6 +195,9 @@ def load_config(environ=None):
         t3ctl_timeout_seconds=_number(
             environment, "T3_DONE_T3CTL_TIMEOUT_SECONDS", T3CTL_TIMEOUT_SECONDS
         ),
+        sources=_sources(environment),
+        claude_projects_dir=_claude_projects_dir(environment),
+        codex_sessions_dir=_codex_sessions_dir(environment),
         environment=environment,
     )
 
@@ -212,6 +269,7 @@ def event(thread, reason, last_message):
         "reason": reason,
         "updated_at": thread.get("updatedAt", ""),
         "last_message": last_message,
+        "source": thread.get("source") or "t3",
     }
 
 
@@ -230,6 +288,7 @@ def append_daybook(payload, directory=None):
     content = (
         f"## {payload.get('title', '')}\n\n"
         f"- ID: {payload['thread_id']}\n"
+        f"- Source: {payload.get('source', 't3')}\n"
         f"- Status: {payload.get('status', 'unknown')}\n\n"
         f"Final message:\n\n{fence}text\n"
         f"{payload.get('last_message', '')}"
@@ -253,9 +312,11 @@ def load_state(path=None):
         path = load_config().state_file
     try:
         with open(path, encoding="utf-8") as handle:
-            return json.load(handle)
+            state = json.load(handle)
     except FileNotFoundError:
         return {}
+    _prune_local_sessions(state)
+    return state
 
 
 def save_state(state, path=None):
@@ -442,6 +503,765 @@ def _matches(watched_id, snap):
     return matches[0] if matches else None
 
 
+def _remember_local_completion(state, key):
+    # Bound tombstones for vanished transcripts; live records retain their last turn too.
+    recent = list(state.get("_local_completed") or [])
+    if key not in recent:
+        recent.append(key)
+    state["_local_completed"] = recent[-RECENT_LOCAL_COMPLETIONS:]
+
+
+def _commit_observation(state, record, thread_id, payload, now, save_path, daybook_dir, watched_id=None,
+                        completed_key=None):
+    """Persist one observation. A failed daybook write leaves the previous state in place."""
+    if payload:
+        append_daybook(payload, daybook_dir)
+    candidate = dict(state)
+    if watched_id is not None:
+        candidate.pop(watched_id, None)
+    candidate[thread_id] = record
+    if completed_key:
+        _remember_local_completion(candidate, completed_key)
+    if payload and needs_attention(payload):
+        candidate["_outbox"] = list(state.get("_outbox") or [])
+        queued = {"payload": payload, "queued_at": now}
+        if completed_key:
+            queued["completion_key"] = completed_key
+        candidate["_outbox"].append(queued)
+    save_state(candidate, save_path)
+    state.clear()
+    state.update(candidate)
+
+
+def _jsonl_records(path):
+    records = []
+    with open(path, encoding="utf-8", errors="replace") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                value = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(value, dict):
+                records.append(value)
+    return records
+
+
+def _block_text(content):
+    if isinstance(content, str):
+        return content
+    if not isinstance(content, list):
+        return ""
+    parts = []
+    for part in content:
+        if isinstance(part, str):
+            parts.append(part)
+        elif isinstance(part, dict) and part.get("type") in {"text", "input_text", "output_text"}:
+            parts.append(str(part.get("text") or ""))
+    return "".join(parts)
+
+
+def _one_line(value, limit=120):
+    lines = str(value or "").strip().splitlines()
+    if not lines or not lines[0].strip():
+        return ""
+    return lines[0].strip()[:limit]
+
+
+def _plain_text(value):
+    text = str(value or "").strip()
+    if not text or text.startswith("gAAAAA"):
+        return ""
+    return text
+
+
+def _error_text(value):
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, dict):
+        message = value.get("message")
+        if isinstance(message, str):
+            return message.strip()
+    return ""
+
+
+def _mtime_stamp(path):
+    stamp = os.stat(path).st_mtime
+    return dt.datetime.fromtimestamp(stamp, dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _updated_key(thread):
+    parsed = parse_time(thread.get("updatedAt"))
+    if parsed is None:
+        return (0, thread.get("updatedAt") or "")
+    return (1, parsed)
+
+
+def _newer_session(left, right):
+    if _updated_key(right) >= _updated_key(left):
+        return right
+    return left
+
+
+def _content_key(value):
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _session_thread(session_id, title, phase, updated, last_message, source, turn_key=None):
+    status = {
+        "running": "running",
+        "completed": "completed",
+        "failed": "failed",
+        "interrupted": "interrupted",
+    }.get(phase, "idle")
+    thread = {
+        "id": session_id,
+        "title": title or session_id,
+        "status": status,
+        "updatedAt": updated,
+        "activeRunId": "open" if phase == "running" else None,
+        "source": source,
+        "last_message": last_message,
+    }
+    if turn_key:
+        thread["turn_key"] = _content_key([source, session_id, turn_key])
+        if phase in {"completed", "failed", "interrupted"}:
+            thread["completion_key"] = thread["turn_key"]
+    return thread
+
+
+def _claude_message_text(record):
+    message = record.get("message")
+    if not isinstance(message, dict):
+        return ""
+    return _block_text(message.get("content")).strip()
+
+
+def _claude_human_prompt(record):
+    """A person-typed prompt. Tool results are user records too, and are not prompts."""
+    if record.get("type") != "user" or record.get("isMeta") or record.get("isCompactSummary"):
+        return False
+    message = record.get("message")
+    if not isinstance(message, dict):
+        return False
+    content = message.get("content")
+    if isinstance(content, list):
+        kinds = [part.get("type") for part in content if isinstance(part, dict)]
+        if kinds and set(kinds) <= {"tool_result"}:
+            return False
+    return bool(_claude_message_text(record))
+
+
+def _claude_has_tool_use(record):
+    message = record.get("message")
+    if not isinstance(message, dict) or not isinstance(message.get("content"), list):
+        return False
+    return any(
+        isinstance(part, dict) and part.get("type") == "tool_use"
+        for part in message["content"]
+    )
+
+
+def _claude_api_failure(record):
+    """Terminal API failure, including the synthetic assistant row Claude Code writes."""
+    message = record.get("message") if isinstance(record.get("message"), dict) else {}
+    if record.get("isApiErrorMessage") or message.get("isApiErrorMessage"):
+        return True
+    model = message.get("model")
+    return (
+        isinstance(model, str)
+        and model.strip() == ""
+        and message.get("stop_reason") == "stop_sequence"
+    )
+
+
+def parse_claude_session(path):
+    """Read one Claude Code transcript.
+
+    Session files are ``<projects>/<cwd-slug>/<sessionId>.jsonl``. A turn stays
+    open until a ``turn_duration`` record or a terminal assistant stop reason
+    (``end_turn``, ``stop_sequence``, ``max_tokens``) that is not waiting on a
+    tool. ``isApiErrorMessage`` and an unrecovered ``api_error`` are failures.
+    """
+    records = _jsonl_records(path)
+    if not records:
+        return None
+    session_id = ""
+    custom_title = ""
+    ai_title = ""
+    first_prompt = ""
+    updated = ""
+    last_message = ""
+    phase = "idle"
+    pending_error = False
+    turn_key = None
+    terminal_key = None
+    terminal_stops = {"end_turn", "stop_sequence", "max_tokens"}
+
+    for record in records:
+        if record.get("sessionId"):
+            session_id = str(record["sessionId"])
+        timestamp = record.get("timestamp")
+        if isinstance(timestamp, str) and timestamp:
+            updated = timestamp
+        kind = record.get("type")
+        if kind == "custom-title" and record.get("customTitle"):
+            custom_title = str(record["customTitle"])
+        elif kind == "ai-title" and record.get("aiTitle"):
+            ai_title = str(record["aiTitle"])
+        elif kind == "summary" and record.get("summary") and not ai_title and not custom_title:
+            ai_title = str(record["summary"])
+        elif _claude_human_prompt(record):
+            turn_key = record.get("uuid") or _content_key(record)
+            terminal_key = None
+            phase = "running"
+            pending_error = False
+            if not first_prompt:
+                first_prompt = _one_line(_claude_message_text(record))
+        elif kind == "assistant":
+            terminal_key = record.get("uuid") or _content_key(record)
+            text = _plain_text(_claude_message_text(record))
+            if text:
+                last_message = text
+            if _claude_api_failure(record):
+                phase = "failed"
+                pending_error = False
+                continue
+            message = record.get("message") if isinstance(record.get("message"), dict) else {}
+            stop = message.get("stop_reason")
+            if stop in {"tool_use", "pause_turn"} or _claude_has_tool_use(record) or stop is None:
+                phase = "running"
+            elif stop in {"refusal", "model_context_window_exceeded"}:
+                phase = "failed"
+                pending_error = False
+            elif stop in terminal_stops:
+                phase = "completed"
+                pending_error = False
+        elif kind == "system":
+            subtype = record.get("subtype")
+            if subtype == "turn_duration":
+                terminal_key = terminal_key or _content_key(record)
+                phase = "completed"
+                pending_error = False
+            elif subtype == "api_error" and str(record.get("level", "")).lower() == "error":
+                terminal_key = _content_key(record)
+                pending_error = True
+                phase = "running"
+                text = _error_text(record.get("error"))
+                if text:
+                    last_message = text
+            elif subtype == "stop_hook_summary" and record.get("preventedContinuation"):
+                phase = "running"
+
+    if pending_error and phase == "running":
+        phase = "failed"
+    if not session_id:
+        session_id = os.path.splitext(os.path.basename(path))[0]
+    if not updated:
+        updated = _mtime_stamp(path)
+    title = custom_title or ai_title or first_prompt
+    return _session_thread(session_id, title, phase, updated, last_message, "claude",
+                           turn_key or terminal_key)
+
+
+def _codex_id_from_name(name):
+    stem = name[:-6] if name.endswith(".jsonl") else name
+    if not stem.startswith("rollout-"):
+        return stem
+    body = stem[len("rollout-"):]
+    if len(body) > 20 and body[19] == "-":
+        return body[20:]
+    return body
+
+
+def _codex_title_from_user(text):
+    for line in str(text or "").splitlines():
+        line = line.strip()
+        if line and not line.startswith("<") and not line.startswith("gAAAAA"):
+            return line[:120]
+    return ""
+
+
+def _codex_error_message(error):
+    text = _error_text(error)
+    if text:
+        return text
+    if isinstance(error, dict):
+        info = error.get("codex_error_info")
+        if isinstance(info, str) and info.strip():
+            return info.strip().replace("_", " ")
+    return ""
+
+
+def parse_codex_session(path):
+    """Read one Codex rollout.
+
+    Files live at ``<sessions>/YYYY/MM/DD/rollout-<timestamp>-<thread-id>.jsonl``.
+    Each line is ``{timestamp, type, payload}``. ``event_msg`` values
+    ``task_started`` / ``turn_started`` open a turn; ``task_complete`` /
+    ``turn_complete`` close it; ``turn_aborted`` closes an interrupt.
+    ``task_complete.error`` and ``turn_aborted`` reason ``budget_limited`` are
+    failures. The thread id is ``session_meta.id`` (a child agent's own id,
+    not its parent ``session_id``).
+    """
+    records = _jsonl_records(path)
+    if not records:
+        return None
+    session_id = ""
+    title = ""
+    updated = ""
+    last_message = ""
+    phase = "idle"
+    turn_key = None
+    turn_id = None
+
+    for record in records:
+        timestamp = record.get("timestamp")
+        if isinstance(timestamp, str) and timestamp:
+            updated = timestamp
+        kind = record.get("type")
+        payload = record.get("payload") if isinstance(record.get("payload"), dict) else {}
+        if kind == "session_meta" and not session_id:
+            session_id = str(payload.get("id") or payload.get("session_id") or "")
+        elif kind == "event_msg":
+            event_name = str(payload.get("type") or "")
+            if event_name in {"task_started", "turn_started"}:
+                turn_id = payload.get("turn_id")
+                turn_key = turn_id or _content_key(record)
+                phase = "running"
+            elif event_name in {"task_complete", "turn_complete"}:
+                turn_id = payload.get("turn_id") or turn_id
+                turn_key = turn_id or turn_key or _content_key(record)
+                agent_message = payload.get("last_agent_message")
+                if isinstance(agent_message, str):
+                    text = _plain_text(agent_message)
+                    if text:
+                        last_message = text
+                error = payload.get("error")
+                if error:
+                    phase = "failed"
+                    error_message = _codex_error_message(error)
+                    if error_message:
+                        last_message = error_message
+                else:
+                    phase = "completed"
+            elif event_name == "turn_aborted":
+                turn_id = payload.get("turn_id") or turn_id
+                turn_key = turn_id or turn_key or _content_key(record)
+                if payload.get("reason") == "budget_limited":
+                    phase = "failed"
+                    if not last_message:
+                        last_message = "budget limited"
+                else:
+                    phase = "interrupted"
+            elif event_name == "user_message":
+                if phase != "running":
+                    turn_id = None
+                turn_key = turn_id or _content_key(record)
+                phase = "running"
+                if not title:
+                    title = _codex_title_from_user(payload.get("message") or "")
+            elif event_name == "agent_message":
+                text = _plain_text(payload.get("message") or "")
+                if text and payload.get("phase") in {None, "final_answer"}:
+                    last_message = text
+        elif kind == "response_item":
+            item = str(payload.get("type") or "")
+            if item == "message" and payload.get("role") == "user":
+                if phase != "running":
+                    turn_id = None
+                turn_key = turn_id or _content_key(record)
+                phase = "running"
+                if not title:
+                    title = _codex_title_from_user(_block_text(payload.get("content")))
+            elif item == "message" and payload.get("role") == "assistant":
+                text = _plain_text(_block_text(payload.get("content")))
+                if text:
+                    last_message = text
+            elif item == "agent_message":
+                content = payload.get("content")
+                text = _plain_text(content if isinstance(content, str) else _block_text(content))
+                if text:
+                    last_message = text
+
+    if not session_id:
+        session_id = _codex_id_from_name(os.path.basename(path))
+    if not updated:
+        updated = _mtime_stamp(path)
+    return _session_thread(session_id, title, phase, updated, last_message, "codex", turn_key)
+
+
+def _read_session(path, parser):
+    try:
+        return parser(path)
+    except Exception as exc:
+        print(
+            f"session read failed ({os.path.basename(path)}, {type(exc).__name__})",
+            flush=True,
+        )
+        return None
+
+
+def _read_stable_session(path, parser):
+    """Parse a stable file and fingerprint its tail, independent of inode/mtime.
+
+    A file that changes while it is being read is left for the next poll, so
+    the stored offset is never ahead of the bytes that were parsed.
+    """
+    try:
+        before = os.stat(path)
+        with open(path, "rb") as handle:
+            handle.seek(max(0, before.st_size - SESSION_TAIL_BYTES))
+            fingerprint = hashlib.sha256(handle.read()).hexdigest()
+    except OSError:
+        print("session read failed", flush=True)
+        return ("missing",)
+    parsed = _read_session(path, parser)
+    try:
+        after = os.stat(path)
+    except OSError:
+        print("session read failed", flush=True)
+        return ("missing",)
+    if any(getattr(after, field) != getattr(before, field) for field in (
+        "st_mtime_ns", "st_ctime_ns", "st_size", "st_dev", "st_ino"
+    )):
+        return ("unstable",)
+    return ("ok", parsed, {
+        "path": path,
+        "mtime_ns": before.st_mtime_ns,
+        "offset": before.st_size,
+        "fingerprint": fingerprint,
+    })
+
+
+def _scan_sessions(paths, parser):
+    found = {}
+    loose = []
+    unstable = []
+    for path in paths:
+        outcome = _read_stable_session(path, parser)
+        if outcome[0] == "unstable":
+            unstable.append(path)
+            continue
+        if outcome[0] != "ok":
+            continue
+        parsed, signature = outcome[1], outcome[2]
+        if not parsed or not parsed.get("id"):
+            loose.append(signature)
+            continue
+        session_id = parsed["id"]
+        current = found.get(session_id)
+        if current is None:
+            found[session_id] = {"thread": parsed, "files": [signature]}
+            continue
+        current["files"].append(signature)
+        current["thread"] = _newer_session(current["thread"], parsed)
+    return list(found.values()), loose, unstable
+
+
+def _claude_paths(root):
+    """Top-level project transcripts only. Nested JSONL files are subagents, not sessions."""
+    paths = []
+    if not root or not os.path.isdir(root):
+        return paths
+    try:
+        projects = list(os.scandir(root))
+    except OSError:
+        print("session read failed", flush=True)
+        return paths
+    for project in projects:
+        try:
+            if not project.is_dir(follow_symlinks=False):
+                continue
+            entries = list(os.scandir(project.path))
+        except OSError:
+            print("session read failed", flush=True)
+            continue
+        for entry in entries:
+            name = entry.name
+            if not name.endswith(".jsonl") or name.startswith("agent-"):
+                continue
+            try:
+                if not entry.is_file(follow_symlinks=False):
+                    continue
+            except OSError:
+                continue
+            paths.append(entry.path)
+    return paths
+
+
+def _codex_paths(root):
+    """Dated rollout files. Compressed ``.jsonl.zst`` archives are left unread."""
+    paths = []
+    if not root or not os.path.isdir(root):
+        return paths
+
+    def walk_error(_error):
+        print("session read failed", flush=True)
+
+    for dirpath, _dirnames, filenames in os.walk(root, onerror=walk_error):
+        for name in filenames:
+            if name.startswith("rollout-") and name.endswith(".jsonl"):
+                paths.append(os.path.join(dirpath, name))
+    return paths
+
+
+def _claude_scan(root):
+    return _scan_sessions(_claude_paths(root), parse_claude_session)
+
+
+def _codex_scan(root):
+    return _scan_sessions(_codex_paths(root), parse_codex_session)
+
+
+def claude_session_threads(root):
+    """Top-level project transcripts only. Nested JSONL files are subagents, not sessions."""
+    observations, _loose, _unstable = _claude_scan(root)
+    return [item["thread"] for item in observations]
+
+
+def codex_session_threads(root):
+    """Dated rollout files. Compressed ``.jsonl.zst`` archives are left unread."""
+    observations, _loose, _unstable = _codex_scan(root)
+    return [item["thread"] for item in observations]
+
+
+def _signature_changed(previous, signature):
+    if not isinstance(previous, dict):
+        return True
+    return (
+        previous.get("offset") != signature["offset"]
+        or (previous.get("fingerprint") is not None
+            and previous["fingerprint"] != signature["fingerprint"])
+    )
+
+
+def _index_entry(signature, session_id, completion_key=None):
+    return {
+        "mtime_ns": signature["mtime_ns"],
+        "offset": signature["offset"],
+        "id": session_id,
+        "fingerprint": signature["fingerprint"],
+        "completion_key": completion_key,
+    }
+
+
+def _path_missing(path):
+    try:
+        os.stat(path)
+    except FileNotFoundError:
+        return True
+    except OSError:
+        pass  # An inaccessible file is not evidence that its session is gone.
+    return False
+
+
+def _prune_local_sessions(state):
+    """Drop absent transcripts and their local records, never T3 thread state.
+
+    The file index also identifies records written before source/path metadata
+    was added. Recent completion hashes and queued deliveries survive pruning.
+    """
+    index = state.get("_files")
+    paths_by_id = {}
+    if isinstance(index, dict):
+        for path, entry in index.items():
+            if isinstance(entry, dict) and entry.get("id"):
+                paths_by_id.setdefault(entry["id"], set()).add(path)
+        state["_files"] = {
+            path: entry for path, entry in index.items() if not _path_missing(path)
+        }
+    for session_id, record in list(state.items()):
+        if not isinstance(record, dict) or session_id.startswith(("_", "thread:")):
+            continue
+        if record.get("source") == "t3":
+            continue
+        paths = paths_by_id.get(session_id, set())
+        if record.get("source") in {"claude", "codex"}:
+            paths.update(record.get("transcript_paths") or [])
+        if paths and all(_path_missing(path) for path in paths):
+            key = record.get("completed_turn")
+            if not key and record.get("last_fired"):
+                key = _content_key([session_id, record["last_fired"]])
+            if key:
+                _remember_local_completion(state, key)
+            del state[session_id]
+
+
+def _track_files(state, observations, loose, unstable):
+    """Remember content signatures. The first index is a baseline."""
+    previous_index = state.get("_files")
+    seeding = not isinstance(previous_index, dict)
+    if seeding:
+        previous_index = {}
+    seen = {}
+    changed = set()
+    previous_by_id = {}
+    for entry in previous_index.values():
+        previous_by_id.setdefault(entry.get("id"), []).append(entry)
+    for item in observations:
+        session_id = item["thread"]["id"]
+        completion_key = item["thread"].get("completion_key")
+        session_changed = False
+        prior_files = previous_by_id.get(session_id, [])
+        for signature in item["files"]:
+            seen[signature["path"]] = _index_entry(signature, session_id, completion_key)
+            previous = previous_index.get(signature["path"])
+            if previous is None:
+                previous = next((entry for entry in prior_files
+                                 if not _signature_changed(entry, signature)), None)
+            if _signature_changed(previous, signature):
+                session_changed = True
+        if completion_key and any(entry.get("completion_key") == completion_key
+                                  for entry in prior_files):
+            session_changed = False
+        if session_changed:
+            changed.add(session_id)
+    for signature in loose:
+        previous = previous_index.get(signature["path"], {})
+        seen[signature["path"]] = _index_entry(signature, previous.get("id", ""))
+    for path in unstable:
+        previous = previous_index.get(path)
+        if isinstance(previous, dict):
+            seen[path] = previous
+    state["_files"] = seen
+    return seeding, changed
+
+
+def _discover_observations(config):
+    observations = []
+    loose = []
+    unstable = []
+    if "claude" in config.sources:
+        found, extra, pending = _claude_scan(config.claude_projects_dir)
+        observations.extend(found)
+        loose.extend(extra)
+        unstable.extend(pending)
+    if "codex" in config.sources:
+        found, extra, pending = _codex_scan(config.codex_sessions_dir)
+        observations.extend(found)
+        loose.extend(extra)
+        unstable.extend(pending)
+    return observations, loose, unstable
+
+
+def poll_local_sessions(
+    state,
+    now=None,
+    env=None,
+    sessions=None,
+    save_path=None,
+    daybook_dir=None,
+    config=None,
+    dry_run=False,
+):
+    """Apply Claude Code and Codex transcripts through the T3 transition rules.
+
+    Discovered files are indexed by path, content fingerprint, and size. Files already
+    finished when that index is first written are not new completions. A file
+    that appears or grows on a later poll is, including a session that started
+    and finished between polls. Passing ``sessions`` skips the index and keeps
+    the rule that a first-seen stopped session is ignored.
+    """
+    config = load_config() if config is None else config
+    now = time.time() if now is None else now
+    environment = config.environment if env is None else env
+    validate_webhook(environment)
+    save_path = config.state_file if save_path is None else save_path
+    daybook_dir = config.daybook_dir if daybook_dir is None else daybook_dir
+    use_index = sessions is None
+    seeding = False
+    changed = set()
+    paths_by_id = {}
+    if use_index:
+        _prune_local_sessions(state)
+        observations, loose, unstable = _discover_observations(config)
+        sessions = [item["thread"] for item in observations]
+        paths_by_id = {item["thread"]["id"]: [entry["path"] for entry in item["files"]]
+                       for item in observations}
+        seeding, changed = _track_files(state, observations, loose, unstable)
+    completed = set(state.get("_local_completed") or [])
+    completed.update(item["completion_key"] for item in state.get("_outbox", [])
+                     if item.get("completion_key"))
+    completed.update(_content_key([
+        item["payload"]["thread_id"],
+        item["payload"]["reason"] + ":" + str(item["payload"]["updated_at"]),
+    ]) for item in state.get("_outbox", [])
+        if not item.get("completion_key")
+        and item["payload"].get("source") in {"claude", "codex"})
+    committed = False
+    try:
+        for thread in sessions:
+            thread_id = thread["id"]
+            previous_record = state.get(thread_id)
+            tracked = isinstance(previous_record, dict)
+            completion_key = thread.get("completion_key")
+            turn_key = thread.get("turn_key")
+            already_completed = turn_key and (
+                turn_key in completed
+                or (tracked and previous_record.get("completed_turn") == turn_key)
+            )
+            if not tracked and not active(thread):
+                if not use_index or seeding or thread_id not in changed:
+                    continue
+                record = {"active": True}
+            else:
+                record = copy.deepcopy(previous_record) if tracked else {}
+                if (
+                    use_index
+                    and not seeding
+                    and thread_id in changed
+                    and not active(thread)
+                    and not record.get("active")
+                ):
+                    record["active"] = True
+            # Migrate delivered completions from the pre-fingerprint state format.
+            reason = "error" if thread.get("status") == "failed" else "done"
+            fired = reason + ":" + thread.get("updatedAt", "")
+            if completion_key and (
+                (not record.get("completed_turn") and record.get("last_fired") == fired)
+                or _content_key([thread_id, fired]) in completed
+            ):
+                already_completed = True
+            if already_completed:
+                record.update(active=False, pending_since=None, pending_status=None)
+                payload = None
+            else:
+                payload = transition(
+                    record,
+                    thread,
+                    now,
+                    debounce_seconds=config.debounce_seconds,
+                    stall_seconds=config.stall_seconds,
+                )
+            if payload:
+                payload["last_message"] = thread.get("last_message") or ""
+            remembered_key = completion_key if (
+                already_completed or (payload and payload["reason"] in {"done", "error"})
+            ) else None
+            if remembered_key:
+                record["completed_turn"] = remembered_key
+            if use_index:
+                record["source"] = thread["source"]
+                record["transcript_paths"] = paths_by_id[thread_id]
+            _commit_observation(
+                state, record, thread_id, payload, now, save_path, daybook_dir,
+                completed_key=remembered_key,
+            )
+            if remembered_key:
+                completed.add(remembered_key)
+            committed = True
+    except Exception:
+        flush_outbox(state, environment, now, save_path, dry_run=dry_run)
+        raise
+    if use_index and not committed:
+        save_state(state, save_path)
+    return flush_outbox(state, environment, now, save_path, dry_run=dry_run)
+
+
 def poll_once(
     state,
     now=None,
@@ -485,17 +1305,16 @@ def poll_once(
             )
             if payload:
                 payload["last_message"] = message_reader(thread_id)
-                append_daybook(payload, daybook_dir)
-
-            candidate = dict(state)
-            candidate.pop(watched_id, None)
-            candidate[thread_id] = record
-            if payload and needs_attention(payload):
-                candidate["_outbox"] = list(state.get("_outbox") or [])
-                candidate["_outbox"].append({"payload": payload, "queued_at": now})
-            save_state(candidate, save_path)
-            state.clear()
-            state.update(candidate)
+            _commit_observation(
+                state,
+                record,
+                thread_id,
+                payload,
+                now,
+                save_path,
+                daybook_dir,
+                watched_id,
+            )
     except Exception:
         flush_outbox(state, environment, now, save_path, dry_run=dry_run)
         raise
@@ -532,22 +1351,38 @@ def main(argv=None):
         )
 
     state = load_state(config.state_file)
+    watch_local = "claude" in config.sources or "codex" in config.sources
     while True:
         poll_failed = False
-        try:
-            state = poll_once(
-                state,
-                env=config.environment,
-                save_path=config.state_file,
-                watch_path=config.watch_file,
-                daybook_dir=config.daybook_dir,
-                config=config,
-                dry_run=arguments.dry_run,
-            )
+        if "t3" in config.sources:
+            try:
+                state = poll_once(
+                    state,
+                    env=config.environment,
+                    save_path=config.state_file,
+                    watch_path=config.watch_file,
+                    daybook_dir=config.daybook_dir,
+                    config=config,
+                    dry_run=arguments.dry_run,
+                )
+            except Exception as exc:
+                print(f"poll failed ({type(exc).__name__})", flush=True)
+                poll_failed = True
+        if watch_local:
+            try:
+                state = poll_local_sessions(
+                    state,
+                    env=config.environment,
+                    save_path=config.state_file,
+                    daybook_dir=config.daybook_dir,
+                    config=config,
+                    dry_run=arguments.dry_run,
+                )
+            except Exception as exc:
+                print(f"poll failed ({type(exc).__name__})", flush=True)
+                poll_failed = True
+        if not poll_failed:
             print("poll complete", flush=True)
-        except Exception as exc:
-            print(f"poll failed ({type(exc).__name__})", flush=True)
-            poll_failed = True
         if arguments.once:
             return 1 if poll_failed else 0
         time.sleep(config.poll_seconds)
