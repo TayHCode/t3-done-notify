@@ -1,0 +1,8 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 /tmp/t3dn-fv-fix/formal/check_dedupe.py --product /tmp/t3dn-fv-fix/formal/.runs/seed-capped-history-aqlvwy_j/t3_done_notify.py --scenario rotation
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 1
+FAIL duplicate completion enqueue [simultaneous unchanged rotations]: session-A (+1)
+
+Actual exit: 1
+Wall runtime seconds: 0.072101
+Recorded expectation matched: True

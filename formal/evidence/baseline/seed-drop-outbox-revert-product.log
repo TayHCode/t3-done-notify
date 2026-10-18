@@ -1,0 +1,11 @@
+Command: /usr/bin/python3 $REPO/formal/check_crashes.py --product $REPO/formal/.runs/seed-drop-outbox-6wld5ht9/t3_done_notify.py --scenario durable-outbox
+Working directory: $REPO
+Expected exit: 0
+DURABLE-OUTBOX REPLAY: PASS
+1. _commit_observation saves a done record and matching _outbox item; restart retains both.
+2. Crash before os.replace leaves the old state and a daybook append; re-observation retries the commit and queues the payload.
+3. Crash after os.replace leaves the done record and queued payload on disk; a failed webhook attempt keeps it queued across restart.
+
+Actual exit: 0
+Wall runtime seconds: 0.093694
+Recorded expectation matched: True

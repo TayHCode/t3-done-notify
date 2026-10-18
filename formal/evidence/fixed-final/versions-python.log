@@ -1,0 +1,9 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 -c 'import sys, websockets; print(sys.version); print('"'"'websockets'"'"', websockets.__version__)'
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 0
+3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]
+websockets 15.0.1
+
+Actual exit: 0
+Wall runtime seconds: 0.036810
+Recorded expectation matched: True

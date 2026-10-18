@@ -1,0 +1,22 @@
+Command: /usr/bin/python3 $REPO/formal/check_crashes.py
+Working directory: $REPO
+Expected exit: 0
+INDEX-LOSS REPLAY: FINDING REPRODUCED
+1. Start with persisted state {'_files': {}}; then create completed attention transcripts A and B.
+2. _track_files records both paths as changed; poll_local_sessions saves A's pending debounce record.
+3. Crash immediately after save_state replaces the state file. Disk has A's record and B's index entry, but no B record.
+4. Restart poll 1: B remains indexed and unrecorded; outbox IDs are ['session-A'].
+5. Restart poll 2: B remains indexed and unrecorded; outbox IDs are ['session-A'].
+6. Restart poll 3: B remains indexed and unrecorded; outbox IDs are ['session-A'].
+FINDING: after three later polls, session-B still has no state record and has zero queued notifications, while session-A has one. Its unchanged signature is already in _files, so _track_files reports no change and poll_local_sessions skips it.
+DURABLE-OUTBOX REPLAY: PASS
+1. _commit_observation saves a done record and matching _outbox item; restart retains both.
+2. Crash before os.replace leaves the old state and a daybook append; re-observation retries the commit and queues the payload.
+3. Crash after os.replace leaves the done record and queued payload on disk; a failed webhook attempt keeps it queued across restart.
+1. A webhook acceptance followed by a crash before flush_outbox saves its acknowledgement causes one retry duplicate; the retry then removes the queue item.
+webhook attempt 1/5 failed (TimeoutError)
+2. Real deliver accepted a payload, saw a simulated timeout, retried the same body, and returned success.
+
+Actual exit: 0
+Wall runtime seconds: 0.081450
+Recorded expectation matched: True

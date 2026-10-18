@@ -1,0 +1,10 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 /tmp/t3dn-fv-fix/formal/check_crashes.py --product /tmp/t3dn-fv-fix/formal/.runs/seed-unstable-id-qszm83_7/t3_done_notify.py --scenario delivery-duplicate
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 1
+1. A webhook acceptance followed by a crash before flush_outbox saves its acknowledgement causes one retry duplicate; the retry then removes the queue item.
+webhook attempt 1/5 failed (TimeoutError)
+FAIL: event identity invariant failed: body/header must match on every retry
+
+Actual exit: 1
+Wall runtime seconds: 0.089950
+Recorded expectation matched: True

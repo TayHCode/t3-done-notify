@@ -1,0 +1,8 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 /tmp/t3dn-fv-fix/formal/check_dedupe.py --product /tmp/t3dn-fv-fix/formal/.runs/seed-bypass-dedupe-0nf64zpz/t3_done_notify.py --scenario ordinary
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 0
+PASS ordinary touch/rewrite/replacement/rename with persistent completion identities: A and B each delivered once
+
+Actual exit: 0
+Wall runtime seconds: 0.079794
+Recorded expectation matched: True

@@ -1,0 +1,1100 @@
+{
+  "status": "fixed properties and mutation checks passed",
+  "total_wall_seconds": 40.175247,
+  "problems": [],
+  "checks": [
+    {
+      "check": "guard",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_guard.py"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.037481,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "versions-java",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-version"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.017879,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "versions-python",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "-c",
+        "import sys, websockets; print(sys.version); print('websockets', websockets.__version__)"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.03681,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "baseline-index-loss",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-baseline-index-loss",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/Crash.cfg",
+        "/tmp/t3dn-fv-fix/formal/Crash.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.509515,
+      "matched": true,
+      "tlc_statistics": [
+        "3126 states generated, 2635 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 89."
+      ]
+    },
+    {
+      "check": "baseline-no-loss-liveness",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-baseline-no-loss-liveness",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/CrashLiveness.cfg",
+        "/tmp/t3dn-fv-fix/formal/Crash.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.551363,
+      "matched": true,
+      "tlc_statistics": [
+        "Progress(89) at 2026-10-18 22:42:02: 890 states generated, 775 distinct states found, 0 states left on queue.",
+        "890 states generated, 775 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 89."
+      ]
+    },
+    {
+      "check": "baseline-durable-outbox",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-baseline-durable-outbox",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/CrashDurable.cfg",
+        "/tmp/t3dn-fv-fix/formal/Crash.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.520334,
+      "matched": true,
+      "tlc_statistics": [
+        "3126 states generated, 2635 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 89."
+      ]
+    },
+    {
+      "check": "baseline-five-retries",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-baseline-five-retries",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/CrashRetry.cfg",
+        "/tmp/t3dn-fv-fix/formal/Crash.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.633811,
+      "matched": true,
+      "tlc_statistics": [
+        "Progress(67) at 2026-10-18 22:42:03: 2,460 states generated, 2,003 distinct states found, 0 states left on queue.",
+        "2460 states generated, 2003 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 67."
+      ]
+    },
+    {
+      "check": "http-physical-duplicate-limit",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-http-physical-duplicate-limit",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/CrashDuplicate.cfg",
+        "/tmp/t3dn-fv-fix/formal/Crash.tla"
+      ],
+      "exit": 12,
+      "expected_exit": 12,
+      "wall_seconds": 0.438199,
+      "matched": true,
+      "tlc_statistics": [
+        "100 states generated, 82 distinct states found, 10 states left on queue.",
+        "The depth of the complete state graph search is 22."
+      ]
+    },
+    {
+      "check": "fixed-rotation-history",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-fixed-rotation-history",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/Dedupe.cfg",
+        "/tmp/t3dn-fv-fix/formal/Dedupe.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 1.908898,
+      "matched": true,
+      "tlc_statistics": [
+        "274007 states generated, 122930 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 57."
+      ]
+    },
+    {
+      "check": "fixed-receiver-idempotency",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-fixed-receiver-idempotency",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/CrashIdempotent.cfg",
+        "/tmp/t3dn-fv-fix/formal/Crash.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.471147,
+      "matched": true,
+      "tlc_statistics": [
+        "532 states generated, 432 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 53."
+      ]
+    },
+    {
+      "check": "baseline-retained-record",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-baseline-retained-record",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/DedupeRetained.cfg",
+        "/tmp/t3dn-fv-fix/formal/Dedupe.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.663019,
+      "matched": true,
+      "tlc_statistics": [
+        "10027 states generated, 7034 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 48."
+      ]
+    },
+    {
+      "check": "baseline-retained-history",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-baseline-retained-history",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/DedupeHistory.cfg",
+        "/tmp/t3dn-fv-fix/formal/Dedupe.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 2.692081,
+      "matched": true,
+      "tlc_statistics": [
+        "472967 states generated, 187730 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 62."
+      ]
+    },
+    {
+      "check": "baseline-product-transition",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_transition.py"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.057263,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "baseline-product-crashes",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_crashes.py"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.083112,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "baseline-product-dedupe",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_dedupe.py"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.222126,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-batch-index-guard-rejects",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_guard.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-batch-index-gx517shn/t3_done_notify.py"
+      ],
+      "exit": 1,
+      "expected_exit": 1,
+      "wall_seconds": 0.035415,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-batch-index-guard-reviewed",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_guard.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-batch-index-gx517shn/t3_done_notify.py",
+        "--recorded",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-batch-index-gx517shn/guarded.json"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.036298,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-batch-index-model-fails",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-seed-batch-index-model-fails",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-batch-index-gx517shn/Crash.cfg",
+        "/tmp/t3dn-fv-fix/formal/Crash.tla"
+      ],
+      "exit": 12,
+      "expected_exit": 12,
+      "wall_seconds": 0.420346,
+      "matched": true,
+      "tlc_statistics": [
+        "20 states generated, 15 distinct states found, 2 states left on queue.",
+        "The depth of the complete state graph search is 8."
+      ]
+    },
+    {
+      "check": "seed-batch-index-product-fails",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_crashes.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-batch-index-gx517shn/t3_done_notify.py",
+        "--scenario",
+        "index-loss"
+      ],
+      "exit": 1,
+      "expected_exit": 1,
+      "wall_seconds": 0.089365,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-batch-index-revert-guard",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_guard.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-batch-index-gx517shn/t3_done_notify.py"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.036547,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-batch-index-revert-model",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-seed-batch-index-revert-model",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/Crash.cfg",
+        "/tmp/t3dn-fv-fix/formal/Crash.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.495484,
+      "matched": true,
+      "tlc_statistics": [
+        "3126 states generated, 2635 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 89."
+      ]
+    },
+    {
+      "check": "seed-batch-index-revert-product",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_crashes.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-batch-index-gx517shn/t3_done_notify.py",
+        "--scenario",
+        "index-loss"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.090397,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-unstable-id-guard-rejects",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_guard.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-unstable-id-9od6umdo/t3_done_notify.py"
+      ],
+      "exit": 1,
+      "expected_exit": 1,
+      "wall_seconds": 0.037947,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-unstable-id-guard-reviewed",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_guard.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-unstable-id-9od6umdo/t3_done_notify.py",
+        "--recorded",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-unstable-id-9od6umdo/guarded.json"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.036785,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-unstable-id-model-fails",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-seed-unstable-id-model-fails",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-unstable-id-9od6umdo/CrashIdempotent.cfg",
+        "/tmp/t3dn-fv-fix/formal/Crash.tla"
+      ],
+      "exit": 12,
+      "expected_exit": 12,
+      "wall_seconds": 0.527436,
+      "matched": true,
+      "tlc_statistics": [
+        "277 states generated, 234 distinct states found, 18 states left on queue.",
+        "The depth of the complete state graph search is 32."
+      ]
+    },
+    {
+      "check": "seed-unstable-id-product-fails",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_crashes.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-unstable-id-9od6umdo/t3_done_notify.py",
+        "--scenario",
+        "delivery-duplicate"
+      ],
+      "exit": 1,
+      "expected_exit": 1,
+      "wall_seconds": 0.128995,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-unstable-id-revert-guard",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_guard.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-unstable-id-9od6umdo/t3_done_notify.py"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.046376,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-unstable-id-revert-model",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-seed-unstable-id-revert-model",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/CrashIdempotent.cfg",
+        "/tmp/t3dn-fv-fix/formal/Crash.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.617056,
+      "matched": true,
+      "tlc_statistics": [
+        "532 states generated, 432 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 53."
+      ]
+    },
+    {
+      "check": "seed-unstable-id-revert-product",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_crashes.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-unstable-id-9od6umdo/t3_done_notify.py",
+        "--scenario",
+        "delivery-duplicate"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.124156,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-capped-history-guard-rejects",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_guard.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-capped-history-_eoc650u/t3_done_notify.py"
+      ],
+      "exit": 1,
+      "expected_exit": 1,
+      "wall_seconds": 0.037288,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-capped-history-guard-reviewed",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_guard.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-capped-history-_eoc650u/t3_done_notify.py",
+        "--recorded",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-capped-history-_eoc650u/guarded.json"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.037452,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-capped-history-model-fails",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-seed-capped-history-model-fails",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-capped-history-_eoc650u/Dedupe.cfg",
+        "/tmp/t3dn-fv-fix/formal/Dedupe.tla"
+      ],
+      "exit": 12,
+      "expected_exit": 12,
+      "wall_seconds": 1.571551,
+      "matched": true,
+      "tlc_statistics": [
+        "190423 states generated, 89605 distinct states found, 5359 states left on queue.",
+        "The depth of the complete state graph search is 36."
+      ]
+    },
+    {
+      "check": "seed-capped-history-product-fails",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_dedupe.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-capped-history-_eoc650u/t3_done_notify.py",
+        "--scenario",
+        "rotation"
+      ],
+      "exit": 1,
+      "expected_exit": 1,
+      "wall_seconds": 0.069924,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-capped-history-revert-guard",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_guard.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-capped-history-_eoc650u/t3_done_notify.py"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.036897,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-capped-history-revert-model",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-seed-capped-history-revert-model",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/Dedupe.cfg",
+        "/tmp/t3dn-fv-fix/formal/Dedupe.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 1.914049,
+      "matched": true,
+      "tlc_statistics": [
+        "274007 states generated, 122930 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 57."
+      ]
+    },
+    {
+      "check": "seed-capped-history-revert-product",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_dedupe.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-capped-history-_eoc650u/t3_done_notify.py",
+        "--scenario",
+        "rotation"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.075779,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-drop-outbox-guard-rejects",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_guard.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-drop-outbox-7dc14zh4/t3_done_notify.py"
+      ],
+      "exit": 1,
+      "expected_exit": 1,
+      "wall_seconds": 0.036733,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-drop-outbox-guard-reviewed",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_guard.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-drop-outbox-7dc14zh4/t3_done_notify.py",
+        "--recorded",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-drop-outbox-7dc14zh4/guarded.json"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.037695,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-drop-outbox-model-fails",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-seed-drop-outbox-model-fails",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-drop-outbox-7dc14zh4/CrashRetry.cfg",
+        "/tmp/t3dn-fv-fix/formal/Crash.tla"
+      ],
+      "exit": 12,
+      "expected_exit": 12,
+      "wall_seconds": 0.456656,
+      "matched": true,
+      "tlc_statistics": [
+        "49 states generated, 38 distinct states found, 3 states left on queue.",
+        "The depth of the complete state graph search is 15."
+      ]
+    },
+    {
+      "check": "seed-drop-outbox-product-fails",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_crashes.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-drop-outbox-7dc14zh4/t3_done_notify.py",
+        "--scenario",
+        "durable-outbox"
+      ],
+      "exit": 1,
+      "expected_exit": 1,
+      "wall_seconds": 0.086049,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-drop-outbox-revert-guard",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_guard.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-drop-outbox-7dc14zh4/t3_done_notify.py"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.038699,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-drop-outbox-revert-model",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-seed-drop-outbox-revert-model",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/CrashRetry.cfg",
+        "/tmp/t3dn-fv-fix/formal/Crash.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.569193,
+      "matched": true,
+      "tlc_statistics": [
+        "Progress(67) at 2026-10-18 22:42:17: 2,460 states generated, 2,003 distinct states found, 0 states left on queue.",
+        "2460 states generated, 2003 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 67."
+      ]
+    },
+    {
+      "check": "seed-drop-outbox-revert-product",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_crashes.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-drop-outbox-7dc14zh4/t3_done_notify.py",
+        "--scenario",
+        "durable-outbox"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.089924,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-bypass-dedupe-guard-rejects",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_guard.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-bypass-dedupe-0nf64zpz/t3_done_notify.py"
+      ],
+      "exit": 1,
+      "expected_exit": 1,
+      "wall_seconds": 0.036819,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-bypass-dedupe-guard-reviewed",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_guard.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-bypass-dedupe-0nf64zpz/t3_done_notify.py",
+        "--recorded",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-bypass-dedupe-0nf64zpz/guarded.json"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.040473,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-bypass-dedupe-model-fails",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-seed-bypass-dedupe-model-fails",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-bypass-dedupe-0nf64zpz/DedupeHistory.cfg",
+        "/tmp/t3dn-fv-fix/formal/Dedupe.tla"
+      ],
+      "exit": 12,
+      "expected_exit": 12,
+      "wall_seconds": 1.282264,
+      "matched": true,
+      "tlc_statistics": [
+        "133644 states generated, 59965 distinct states found, 6141 states left on queue.",
+        "The depth of the complete state graph search is 28."
+      ]
+    },
+    {
+      "check": "seed-bypass-dedupe-product-fails",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_dedupe.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-bypass-dedupe-0nf64zpz/t3_done_notify.py",
+        "--scenario",
+        "ordinary"
+      ],
+      "exit": 1,
+      "expected_exit": 1,
+      "wall_seconds": 0.074425,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-bypass-dedupe-revert-guard",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_guard.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-bypass-dedupe-0nf64zpz/t3_done_notify.py"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.040567,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-bypass-dedupe-revert-model",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "/tmp/t3dn-fv-fix/formal/.runs/states-1232120-seed-bypass-dedupe-revert-model",
+        "-config",
+        "/tmp/t3dn-fv-fix/formal/DedupeHistory.cfg",
+        "/tmp/t3dn-fv-fix/formal/Dedupe.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 2.831015,
+      "matched": true,
+      "tlc_statistics": [
+        "472967 states generated, 187730 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 62."
+      ]
+    },
+    {
+      "check": "seed-bypass-dedupe-revert-product",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_dedupe.py",
+        "--product",
+        "/tmp/t3dn-fv-fix/formal/.runs/seed-bypass-dedupe-0nf64zpz/t3_done_notify.py",
+        "--scenario",
+        "ordinary"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.079794,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "existing-tests",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-q"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 19.100959,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "final-guard",
+      "command": [
+        "/tmp/t3dn-fv-fix/.venv/bin/python3",
+        "/tmp/t3dn-fv-fix/formal/check_guard.py"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.041061,
+      "matched": true,
+      "tlc_statistics": []
+    }
+  ]
+}

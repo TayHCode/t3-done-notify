@@ -1,0 +1,14 @@
+Product: fixed branch
+Command: python3 -m unittest discover -s tests -p test_fv_fixes.py -v
+test_f1_crash_after_a_commit_leaves_b_discoverable (test_fv_fixes.FindingRegressionTests.test_f1_crash_after_a_commit_leaves_b_discoverable) ... ok
+test_f2_lost_response_and_ack_crash_preserve_event_identity (test_fv_fixes.FindingRegressionTests.test_f2_lost_response_and_ack_crash_preserve_event_identity) ... webhook attempt 1/5 failed (TimeoutError)
+webhook attempt 1/5 failed (TimeoutError)
+webhook attempt 1/5 failed (TimeoutError)
+ok
+test_f3_rename_after_2048_other_completions_does_not_repeat (test_fv_fixes.FindingRegressionTests.test_f3_rename_after_2048_other_completions_does_not_repeat) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.110s
+
+OK
+Exit: 0

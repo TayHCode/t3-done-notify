@@ -1,0 +1,8 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 /tmp/t3dn-fv-fix/formal/check_guard.py --product /tmp/t3dn-fv-fix/formal/.runs/seed-bypass-dedupe-kdim0_zi/t3_done_notify.py
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 0
+PASS: guarded product hash b3e9c729731cba1d3fb48329c398f240a83ce40e8657f96d28f20fa5804bd204
+
+Actual exit: 0
+Wall runtime seconds: 0.035043
+Recorded expectation matched: True

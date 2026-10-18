@@ -1,0 +1,12 @@
+Command: gitleaks detect --source /tmp/t3dn-fv-fix --log-opts=--all --redact
+
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+10:42PM INF 3 commits scanned.
+10:42PM INF scanned ~571817 bytes (571.82 KB) in 118ms
+10:42PM INF no leaks found
+Exit: 0

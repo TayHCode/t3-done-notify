@@ -1,0 +1,11 @@
+--- a/t3_done_notify.py
++++ b/t3_done_notify.py
+@@ -432,7 +432,7 @@
+         headers={
+             "Authorization": "Bearer " + key,
+             "Content-Type": "application/json",
+-            "Idempotency-Key": payload["event_id"],
++            "Idempotency-Key": str(time.time_ns()),  # FORMAL SEED: new key per deliver
+         },
+     )
+     opener = _webhook_opener()

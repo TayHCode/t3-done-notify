@@ -1,0 +1,288 @@
+Command: $HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java -XX:+UseParallelGC -Xmx1g -cp $HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar tlc2.TLC -workers 1 -seed 1 -fp 0 -noGenerateSpecTE -difftrace -metadir $REPO/formal/.runs/states-965214-seed-bypass-dedupe-model-fails -config $REPO/formal/.runs/seed-bypass-dedupe-kimv55yd/DedupeHistory.cfg $REPO/formal/Dedupe.tla
+Working directory: $REPO
+Expected exit: 12
+TLC2 Version 2026.10.15.145915 (rev: 932d35e)
+Running breadth-first search Model-Checking with fp 0 and seed 1 with 1 worker on 16 cores with 910MB heap and 64MB offheap memory [pid: 966305] (Linux 7.0.0-38-generic amd64, Eclipse Adoptium 21.0.12-patch1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file $REPO/formal/Dedupe.tla
+Parsing file /tmp/tlc-7168827989205176707/Naturals.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-7168827989205176707/Sequences.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-7168827989205176707/FiniteSets.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module Dedupe
+Linting of module Dedupe
+Starting... (2026-10-18 21:40:00)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-10-18 21:40:00.
+Error: Invariant NoDuplicateEnqueue is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ changed = {}
+/\ remember = FALSE
+/\ order = <<1, 2>>
+/\ source = <<0, 0>>
+/\ seen = {}
+/\ recordOrder = <<>>
+/\ working = [ present |-> FALSE,
+  active |-> FALSE,
+  pending |-> FALSE,
+  completed |-> 0,
+  path |-> 2 ]
+/\ recent = <<>>
+/\ indexKey = <<0, 0>>
+/\ indexPath = <<2, 2>>
+/\ path = <<0, 0>>
+/\ payload = FALSE
+/\ pruneOrder = <<>>
+/\ cache = {}
+/\ pc = "idle"
+/\ records = << [ present |-> FALSE,
+     active |-> FALSE,
+     pending |-> FALSE,
+     completed |-> 0,
+     path |-> 2 ],
+   [ present |-> FALSE,
+     active |-> FALSE,
+     pending |-> FALSE,
+     completed |-> 0,
+     path |-> 2 ] >>
+/\ enqueued = <<0, 0, 0>>
+/\ cursor = 1
+/\ stat = <<0, 0>>
+
+State 2: <WriteNewTurn(1) line 61, col 5 to line 66, col 29 of module Dedupe>
+/\ source = <<1, 0>>
+/\ seen = {1}
+
+State 3: <BeginPoll line 102, col 5 to line 110, col 62 of module Dedupe>
+/\ pc = "prune"
+
+State 4: <ScanAndCache line 131, col 5 to line 138, col 68 of module Dedupe>
+/\ changed = {1}
+/\ indexKey = <<1, 0>>
+/\ indexPath = <<0, 2>>
+/\ pc = "observe"
+
+State 5: <Observe line 157, col 5 to line 174, col 76 of module Dedupe>
+/\ working = [ present |-> TRUE,
+  active |-> TRUE,
+  pending |-> TRUE,
+  completed |-> 0,
+  path |-> 0 ]
+/\ pc = "commit"
+
+State 6: <Commit line 182, col 5 to line 194, col 50 of module Dedupe>
+/\ recordOrder = <<1>>
+/\ pc = "observe"
+/\ records = << [ present |-> TRUE,
+     active |-> TRUE,
+     pending |-> TRUE,
+     completed |-> 0,
+     path |-> 0 ],
+   [ present |-> FALSE,
+     active |-> FALSE,
+     pending |-> FALSE,
+     completed |-> 0,
+     path |-> 2 ] >>
+/\ cursor = 2
+
+State 7: <Skip line 143, col 5 to line 149, col 44 of module Dedupe>
+/\ cursor = 3
+
+State 8: <EndPoll line 199, col 5 to line 203, col 52 of module Dedupe>
+/\ changed = {}
+/\ working = [ present |-> FALSE,
+  active |-> FALSE,
+  pending |-> FALSE,
+  completed |-> 0,
+  path |-> 2 ]
+/\ pc = "idle"
+/\ cursor = 1
+
+State 9: <BeginPoll line 102, col 5 to line 110, col 62 of module Dedupe>
+/\ pruneOrder = <<1>>
+/\ pc = "prune"
+
+State 10: <PruneRecord line 116, col 5 to line 125, col 76 of module Dedupe>
+/\ cursor = 2
+
+State 11: <ScanAndCache line 131, col 5 to line 138, col 68 of module Dedupe>
+/\ pc = "observe"
+/\ cursor = 1
+
+State 12: <Observe line 157, col 5 to line 174, col 76 of module Dedupe>
+/\ remember = TRUE
+/\ working = [ present |-> TRUE,
+  active |-> FALSE,
+  pending |-> FALSE,
+  completed |-> 1,
+  path |-> 0 ]
+/\ payload = TRUE
+/\ pc = "commit"
+
+State 13: <Commit line 182, col 5 to line 194, col 50 of module Dedupe>
+/\ recent = <<1>>
+/\ cache = {1}
+/\ pc = "observe"
+/\ records = << [ present |-> TRUE,
+     active |-> FALSE,
+     pending |-> FALSE,
+     completed |-> 1,
+     path |-> 0 ],
+   [ present |-> FALSE,
+     active |-> FALSE,
+     pending |-> FALSE,
+     completed |-> 0,
+     path |-> 2 ] >>
+/\ enqueued = <<1, 0, 0>>
+/\ cursor = 2
+
+State 14: <Skip line 143, col 5 to line 149, col 44 of module Dedupe>
+/\ cursor = 3
+
+State 15: <EndPoll line 199, col 5 to line 203, col 52 of module Dedupe>
+/\ remember = FALSE
+/\ working = [ present |-> FALSE,
+  active |-> FALSE,
+  pending |-> FALSE,
+  completed |-> 0,
+  path |-> 2 ]
+/\ payload = FALSE
+/\ cache = {}
+/\ pc = "idle"
+/\ cursor = 1
+
+State 16: <RotateSameContent(1) line 81, col 5 to line 85, col 35 of module Dedupe>
+/\ path = <<1, 0>>
+
+State 17: <BeginPoll line 102, col 5 to line 110, col 62 of module Dedupe>
+/\ indexKey = <<0, 0>>
+/\ indexPath = <<2, 2>>
+/\ pc = "prune"
+
+State 18: <PruneRecord line 116, col 5 to line 125, col 76 of module Dedupe>
+/\ recordOrder = <<>>
+/\ records = << [ present |-> FALSE,
+     active |-> FALSE,
+     pending |-> FALSE,
+     completed |-> 0,
+     path |-> 2 ],
+   [ present |-> FALSE,
+     active |-> FALSE,
+     pending |-> FALSE,
+     completed |-> 0,
+     path |-> 2 ] >>
+/\ cursor = 2
+
+State 19: <ScanAndCache line 131, col 5 to line 138, col 68 of module Dedupe>
+/\ changed = {1}
+/\ indexKey = <<1, 0>>
+/\ indexPath = <<1, 2>>
+/\ cache = {1}
+/\ pc = "observe"
+/\ cursor = 1
+
+State 20: <Observe line 157, col 5 to line 174, col 76 of module Dedupe>
+/\ remember = TRUE
+/\ working = [ present |-> TRUE,
+  active |-> TRUE,
+  pending |-> TRUE,
+  completed |-> 1,
+  path |-> 1 ]
+/\ pc = "commit"
+
+State 21: <Commit line 182, col 5 to line 194, col 50 of module Dedupe>
+/\ recordOrder = <<1>>
+/\ pc = "observe"
+/\ records = << [ present |-> TRUE,
+     active |-> TRUE,
+     pending |-> TRUE,
+     completed |-> 1,
+     path |-> 1 ],
+   [ present |-> FALSE,
+     active |-> FALSE,
+     pending |-> FALSE,
+     completed |-> 0,
+     path |-> 2 ] >>
+/\ cursor = 2
+
+State 22: <Skip line 143, col 5 to line 149, col 44 of module Dedupe>
+/\ cursor = 3
+
+State 23: <EndPoll line 199, col 5 to line 203, col 52 of module Dedupe>
+/\ changed = {}
+/\ remember = FALSE
+/\ working = [ present |-> FALSE,
+  active |-> FALSE,
+  pending |-> FALSE,
+  completed |-> 0,
+  path |-> 2 ]
+/\ cache = {}
+/\ pc = "idle"
+/\ cursor = 1
+
+State 24: <BeginPoll line 102, col 5 to line 110, col 62 of module Dedupe>
+/\ pc = "prune"
+
+State 25: <PruneRecord line 116, col 5 to line 125, col 76 of module Dedupe>
+/\ cursor = 2
+
+State 26: <ScanAndCache line 131, col 5 to line 138, col 68 of module Dedupe>
+/\ cache = {1}
+/\ pc = "observe"
+/\ cursor = 1
+
+State 27: <Observe line 157, col 5 to line 174, col 76 of module Dedupe>
+/\ remember = TRUE
+/\ working = [ present |-> TRUE,
+  active |-> FALSE,
+  pending |-> FALSE,
+  completed |-> 1,
+  path |-> 1 ]
+/\ payload = TRUE
+/\ cache = {1}
+/\ pc = "commit"
+/\ cursor = 1
+
+State 28: <Commit line 182, col 5 to line 194, col 50 of module Dedupe>
+/\ changed = {}
+/\ remember = TRUE
+/\ order = <<1, 2>>
+/\ source = <<1, 0>>
+/\ seen = {1}
+/\ recordOrder = <<1>>
+/\ working = [ present |-> TRUE,
+  active |-> FALSE,
+  pending |-> FALSE,
+  completed |-> 1,
+  path |-> 1 ]
+/\ recent = <<1>>
+/\ indexKey = <<1, 0>>
+/\ indexPath = <<1, 2>>
+/\ path = <<1, 0>>
+/\ payload = TRUE
+/\ pruneOrder = <<1>>
+/\ cache = {1}
+/\ pc = "observe"
+/\ records = << [ present |-> TRUE,
+     active |-> FALSE,
+     pending |-> FALSE,
+     completed |-> 1,
+     path |-> 1 ],
+   [ present |-> FALSE,
+     active |-> FALSE,
+     pending |-> FALSE,
+     completed |-> 0,
+     path |-> 2 ] >>
+/\ enqueued = <<2, 0, 0>>
+/\ cursor = 2
+/\ stat = <<0, 0>>
+
+133644 states generated, 59965 distinct states found, 6141 states left on queue.
+The depth of the complete state graph search is 28.
+Finished in 01s at (2026-10-18 21:40:01)
+
+Actual exit: 12
+Wall runtime seconds: 1.291417
+Recorded expectation matched: True

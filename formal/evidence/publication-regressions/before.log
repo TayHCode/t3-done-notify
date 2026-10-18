@@ -1,0 +1,82 @@
+Product: public main 914f961
+Command: python3 -m unittest discover -s tests -p test_fv_fixes.py -v
+test_f1_crash_after_a_commit_leaves_b_discoverable (test_fv_fixes.FindingRegressionTests.test_f1_crash_after_a_commit_leaves_b_discoverable) ... 
+  test_f1_crash_after_a_commit_leaves_b_discoverable (test_fv_fixes.FindingRegressionTests.test_f1_crash_after_a_commit_leaves_b_discoverable) (existing_b=False) ... FAIL
+  test_f1_crash_after_a_commit_leaves_b_discoverable (test_fv_fixes.FindingRegressionTests.test_f1_crash_after_a_commit_leaves_b_discoverable) (existing_b=True) ... FAIL
+test_f2_lost_response_and_ack_crash_preserve_event_identity (test_fv_fixes.FindingRegressionTests.test_f2_lost_response_and_ack_crash_preserve_event_identity) ... 
+  test_f2_lost_response_and_ack_crash_preserve_event_identity (test_fv_fixes.FindingRegressionTests.test_f2_lost_response_and_ack_crash_preserve_event_identity) (source='t3') ... FAIL
+  test_f2_lost_response_and_ack_crash_preserve_event_identity (test_fv_fixes.FindingRegressionTests.test_f2_lost_response_and_ack_crash_preserve_event_identity) (source='claude') ... FAIL
+  test_f2_lost_response_and_ack_crash_preserve_event_identity (test_fv_fixes.FindingRegressionTests.test_f2_lost_response_and_ack_crash_preserve_event_identity) (source='codex') ... FAIL
+test_f3_rename_after_2048_other_completions_does_not_repeat (test_fv_fixes.FindingRegressionTests.test_f3_rename_after_2048_other_completions_does_not_repeat) ... FAIL
+
+======================================================================
+FAIL: test_f1_crash_after_a_commit_leaves_b_discoverable (test_fv_fixes.FindingRegressionTests.test_f1_crash_after_a_commit_leaves_b_discoverable) (existing_b=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/t3dn-public-main-s2tr4ml5/tests/test_fv_fixes.py", line 72, in test_f1_crash_after_a_commit_leaves_b_discoverable
+    self.assertTrue(
+    ~~~~~~~~~~~~~~~^
+        state["_files"].get(b_path) == previous_index.get(b_path),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        "B index must stay at its previously committed observation",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: False is not true : B index must stay at its previously committed observation
+
+======================================================================
+FAIL: test_f1_crash_after_a_commit_leaves_b_discoverable (test_fv_fixes.FindingRegressionTests.test_f1_crash_after_a_commit_leaves_b_discoverable) (existing_b=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/t3dn-public-main-s2tr4ml5/tests/test_fv_fixes.py", line 72, in test_f1_crash_after_a_commit_leaves_b_discoverable
+    self.assertTrue(
+    ~~~~~~~~~~~~~~~^
+        state["_files"].get(b_path) == previous_index.get(b_path),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        "B index must stay at its previously committed observation",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: False is not true : B index must stay at its previously committed observation
+
+======================================================================
+FAIL: test_f2_lost_response_and_ack_crash_preserve_event_identity (test_fv_fixes.FindingRegressionTests.test_f2_lost_response_and_ack_crash_preserve_event_identity) (source='t3')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/t3dn-public-main-s2tr4ml5/tests/test_fv_fixes.py", line 101, in test_f2_lost_response_and_ack_crash_preserve_event_identity
+    self.assertTrue(payload.get("event_id"), "every generated payload needs an event_id")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None is not true : every generated payload needs an event_id
+
+======================================================================
+FAIL: test_f2_lost_response_and_ack_crash_preserve_event_identity (test_fv_fixes.FindingRegressionTests.test_f2_lost_response_and_ack_crash_preserve_event_identity) (source='claude')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/t3dn-public-main-s2tr4ml5/tests/test_fv_fixes.py", line 101, in test_f2_lost_response_and_ack_crash_preserve_event_identity
+    self.assertTrue(payload.get("event_id"), "every generated payload needs an event_id")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None is not true : every generated payload needs an event_id
+
+======================================================================
+FAIL: test_f2_lost_response_and_ack_crash_preserve_event_identity (test_fv_fixes.FindingRegressionTests.test_f2_lost_response_and_ack_crash_preserve_event_identity) (source='codex')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/t3dn-public-main-s2tr4ml5/tests/test_fv_fixes.py", line 101, in test_f2_lost_response_and_ack_crash_preserve_event_identity
+    self.assertTrue(payload.get("event_id"), "every generated payload needs an event_id")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None is not true : every generated payload needs an event_id
+
+======================================================================
+FAIL: test_f3_rename_after_2048_other_completions_does_not_repeat (test_fv_fixes.FindingRegressionTests.test_f3_rename_after_2048_other_completions_does_not_repeat)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/t3dn-public-main-s2tr4ml5/tests/test_fv_fixes.py", line 156, in test_f3_rename_after_2048_other_completions_does_not_repeat
+    self.assertEqual(deliver.call_count, 1, "renaming unchanged content must not notify again")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1 : renaming unchanged content must not notify again
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.142s
+
+FAILED (failures=6)
+Exit: 1

@@ -1,0 +1,30 @@
+Command: $HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java -XX:+UseParallelGC -Xmx1g -cp $HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar tlc2.TLC -workers 1 -seed 1 -fp 0 -noGenerateSpecTE -difftrace -metadir /tmp/t3dn-fv-fix/formal/.runs/states-1311094-seed-capped-history-revert-model -config /tmp/t3dn-fv-fix/formal/Dedupe.cfg /tmp/t3dn-fv-fix/formal/Dedupe.tla
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 0
+TLC2 Version 2026.10.15.145915 (rev: 932d35e)
+Running breadth-first search Model-Checking with fp 0 and seed 1 with 1 worker on 16 cores with 910MB heap and 64MB offheap memory [pid: 1316250] (Linux 7.0.0-38-generic amd64, Eclipse Adoptium 21.0.12-patch1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/t3dn-fv-fix/formal/Dedupe.tla
+Parsing file /tmp/tlc-17077394181794351073/Naturals.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-17077394181794351073/Sequences.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /tmp/tlc-17077394181794351073/FiniteSets.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module Dedupe
+Linting of module Dedupe
+Starting... (2026-10-18 22:52:11)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-10-18 22:52:11.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.0E-9
+  based on the actual fingerprints:  val = 5.2E-10
+274007 states generated, 122930 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 57.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 6 and the 95th percentile is 2).
+Finished in 01s at (2026-10-18 22:52:12)
+
+Actual exit: 0
+Wall runtime seconds: 1.781396
+Recorded expectation matched: True

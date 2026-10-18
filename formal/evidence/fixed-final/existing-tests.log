@@ -1,0 +1,15 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 -m unittest discover -s tests -q
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 0
+webhook attempt 1/5 failed (TimeoutError)
+webhook attempt 1/5 failed (TimeoutError)
+webhook attempt 1/5 failed (TimeoutError)
+webhook attempt 1/1 failed (HTTP 302)
+----------------------------------------------------------------------
+Ran 83 tests in 18.968s
+
+OK
+
+Actual exit: 0
+Wall runtime seconds: 19.100959
+Recorded expectation matched: True

@@ -1,0 +1,7 @@
+{
+  "baseline_commit": "914f961e2f1118615a5a45edb9b80873ba3f0b89",
+  "sha256": {
+    "t3_done_notify.py": "b3e9c729731cba1d3fb48329c398f240a83ce40e8657f96d28f20fa5804bd204"
+  },
+  "review": "F1-F3 reviewed against per-session commit, stable retry identity, and uncapped completion history; see formal/README.md."
+}

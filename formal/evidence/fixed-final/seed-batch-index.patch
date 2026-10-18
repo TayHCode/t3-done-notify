@@ -1,0 +1,10 @@
+--- a/t3_done_notify.py
++++ b/t3_done_notify.py
+@@ -1150,6 +1150,7 @@
+         previous = previous_index.get(path)
+         if isinstance(previous, dict):
+             seen[path] = previous
++    state["_files"] = seen  # FORMAL SEED: publish uncommitted observations
+     return seeding, changed, seen
+ 
+ 

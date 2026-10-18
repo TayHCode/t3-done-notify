@@ -1,0 +1,10 @@
+Command: /usr/bin/python3 $REPO/formal/check_dedupe.py
+Working directory: $REPO
+Expected exit: 0
+PASS ordinary touch/rewrite/replacement/rename after A tombstone eviction: A and B each delivered once
+FINDING capacity-one simultaneous same-content rotations: session-A was enqueued again after both sessions were pruned; deliveries=['session-A', 'session-B', 'session-A']
+FINDING RECENT_LOCAL_COMPLETIONS=2048 same-content rename: A's key was evicted by a reachable-prefix fixture of 2048 vanished completed records, then prune/discovery caused a duplicate enqueue; deliveries=['session-A', 'session-A']
+
+Actual exit: 0
+Wall runtime seconds: 0.259137
+Recorded expectation matched: True

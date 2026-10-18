@@ -9,3 +9,12 @@ state.json
 state.json.tmp
 daybook/
 *.log
+
+# Formal verification caches and generated trace-exploration modules.
+formal/.runs/
+formal/*_TTrace_*
+formal/states/
+*.jar
+formal/*.tar.gz
+formal/jdk*/
+!formal/evidence/**/*.log

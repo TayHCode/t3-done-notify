@@ -1,0 +1,10 @@
+Command: $HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java -version
+Working directory: $REPO
+Expected exit: 0
+openjdk version "21.0.12-patch1" 2026-08-18 LTS
+OpenJDK Runtime Environment Temurin-21.0.12-patch1+1 (build 21.0.12-patch1+1-LTS)
+OpenJDK 64-Bit Server VM Temurin-21.0.12-patch1+1 (build 21.0.12-patch1+1-LTS, mixed mode, sharing)
+
+Actual exit: 0
+Wall runtime seconds: 0.018138
+Recorded expectation matched: True

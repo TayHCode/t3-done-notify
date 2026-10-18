@@ -1,0 +1,8 @@
+Command: /usr/bin/python3 $REPO/formal/check_guard.py --product $REPO/formal/.runs/seed-bypass-dedupe-kimv55yd/t3_done_notify.py --recorded $REPO/formal/.runs/seed-bypass-dedupe-kimv55yd/guarded.json
+Working directory: $REPO
+Expected exit: 0
+PASS: guarded product hash 868b548e169cededa1f56eeacfb63bce79ca31367d09c04ee761ae367f798d8e
+
+Actual exit: 0
+Wall runtime seconds: 0.036595
+Recorded expectation matched: True

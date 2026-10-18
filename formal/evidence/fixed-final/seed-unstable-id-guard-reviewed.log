@@ -1,0 +1,8 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 /tmp/t3dn-fv-fix/formal/check_guard.py --product /tmp/t3dn-fv-fix/formal/.runs/seed-unstable-id-9od6umdo/t3_done_notify.py --recorded /tmp/t3dn-fv-fix/formal/.runs/seed-unstable-id-9od6umdo/guarded.json
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 0
+PASS: guarded product hash 1a18dff529bed28292c33d4b31e9644b5a9916b1a025146ca1a249dfd16d3710
+
+Actual exit: 0
+Wall runtime seconds: 0.036785
+Recorded expectation matched: True

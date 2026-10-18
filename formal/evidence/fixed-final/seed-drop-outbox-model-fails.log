@@ -1,0 +1,133 @@
+Command: $HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java -XX:+UseParallelGC -Xmx1g -cp $HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar tlc2.TLC -workers 1 -seed 1 -fp 0 -noGenerateSpecTE -difftrace -metadir /tmp/t3dn-fv-fix/formal/.runs/states-1232120-seed-drop-outbox-model-fails -config /tmp/t3dn-fv-fix/formal/.runs/seed-drop-outbox-7dc14zh4/CrashRetry.cfg /tmp/t3dn-fv-fix/formal/Crash.tla
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 12
+TLC2 Version 2026.10.15.145915 (rev: 932d35e)
+Running breadth-first search Model-Checking with fp 0 and seed 1 with 1 worker on 16 cores with 910MB heap and 64MB offheap memory [pid: 1233908] (Linux 7.0.0-38-generic amd64, Eclipse Adoptium 21.0.12-patch1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/t3dn-fv-fix/formal/Crash.tla
+Parsing file /tmp/tlc-18023763090480392756/Naturals.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-18023763090480392756/FiniteSets.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-18023763090480392756/TLC.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-18023763090480392756/Sequences.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/Sequences.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module Crash
+Linting of module Crash
+Starting... (2026-10-18 22:42:16)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-10-18 22:42:17.
+Error: Invariant DurableOutbox is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> {}, records |-> <<0>>, outbox |-> {}]
+/\ pc = "scan"
+/\ remaining = {}
+/\ disk = [files |-> {}, records |-> <<0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ identities = <<{}>>
+/\ record = 0
+/\ requestId = 1
+/\ received = <<0>>
+/\ keep = {}
+/\ committed = {}
+/\ crashes = 0
+/\ session = 1
+/\ memory = [files |-> {}, records |-> <<0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<0>>
+/\ temporary = [files |-> {}, records |-> <<0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 2: <Scan line 41, col 5 to line 47, col 51 of module Crash>
+/\ pc = "observe"
+/\ changed = {1}
+
+State 3: <Observe line 62, col 5 to line 69, col 61 of module Crash>
+/\ pc = "daybook"
+/\ record = 1
+
+State 4: <AppendDaybook line 75, col 5 to line 81, col 70 of module Crash>
+/\ pc = "build"
+
+State 5: <BuildObservation line 87, col 5 to line 95, col 51 of module Crash>
+/\ candidate = [files |-> {1}, records |-> <<1>>, outbox |-> {}]
+/\ pc = "write-temp"
+
+State 6: <WriteTemp line 100, col 5 to line 103, col 61 of module Crash>
+/\ pc = "replace"
+/\ temporary = [files |-> {1}, records |-> <<1>>, outbox |-> {}]
+
+State 7: <Replace line 108, col 5 to line 113, col 59 of module Crash>
+/\ pc = "publish"
+/\ disk = [files |-> {1}, records |-> <<1>>, outbox |-> {}]
+
+State 8: <CrashProcess line 205, col 5 to line 211, col 77 of module Crash>
+/\ candidate = [files |-> {}, records |-> <<0>>, outbox |-> {}]
+/\ pc = "restart"
+/\ record = 0
+/\ crashes = 1
+/\ changed = {}
+/\ temporary = [files |-> {}, records |-> <<0>>, outbox |-> {}]
+
+State 9: <Restart line 215, col 5 to line 218, col 70 of module Crash>
+/\ pc = "scan"
+/\ memory = [files |-> {1}, records |-> <<1>>, outbox |-> {}]
+
+State 10: <Scan line 41, col 5 to line 47, col 51 of module Crash>
+/\ pc = "observe"
+
+State 11: <Observe line 62, col 5 to line 69, col 61 of module Crash>
+/\ pc = "daybook"
+/\ record = 2
+/\ payload = TRUE
+
+State 12: <AppendDaybook line 75, col 5 to line 81, col 70 of module Crash>
+/\ pc = "build"
+/\ daybook = <<1>>
+
+State 13: <BuildObservation line 87, col 5 to line 95, col 51 of module Crash>
+/\ candidate = [files |-> {1}, records |-> <<2>>, outbox |-> {}]
+/\ pc = "write-temp"
+
+State 14: <WriteTemp line 100, col 5 to line 103, col 61 of module Crash>
+/\ candidate = [files |-> {1}, records |-> <<2>>, outbox |-> {}]
+/\ pc = "replace"
+/\ temporary = [files |-> {1}, records |-> <<2>>, outbox |-> {}]
+
+State 15: <Replace line 108, col 5 to line 113, col 59 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> {1}, records |-> <<2>>, outbox |-> {}]
+/\ pc = "publish"
+/\ remaining = {}
+/\ disk = [files |-> {1}, records |-> <<2>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ identities = <<{}>>
+/\ record = 2
+/\ requestId = 1
+/\ received = <<0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> {1}, records |-> <<1>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = TRUE
+/\ daybook = <<1>>
+/\ temporary = [files |-> {1}, records |-> <<2>>, outbox |-> {}]
+/\ attempt = 1
+
+49 states generated, 38 distinct states found, 3 states left on queue.
+The depth of the complete state graph search is 15.
+Finished in 00s at (2026-10-18 22:42:17)
+
+Actual exit: 12
+Wall runtime seconds: 0.456656
+Recorded expectation matched: True

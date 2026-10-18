@@ -29,7 +29,6 @@ STOPPED_STATUSES = {
 RETRY_DELAYS = (1, 2, 4, 8)
 SOURCE_NAMES = ("t3", "claude", "codex")
 SESSION_TAIL_BYTES = 16384
-RECENT_LOCAL_COMPLETIONS = 2048
 ATTENTION_PATTERN = re.compile(
     r"\b(blocked|approval|approve|permission|need(?:s)? (?:you|someone)|"
     r"please (?:confirm|approve)|yes/no|(?:can|could|would) you)\b|\?",
@@ -262,7 +261,7 @@ def transition(state, thread, now, last_message="", debounce_seconds=None, stall
 
 
 def event(thread, reason, last_message):
-    return {
+    payload = {
         "thread_id": thread["id"],
         "title": thread.get("title", ""),
         "status": thread.get("status", "unknown"),
@@ -271,6 +270,20 @@ def event(thread, reason, last_message):
         "last_message": last_message,
         "source": thread.get("source") or "t3",
     }
+    payload["event_id"] = _content_key([
+        payload["source"], thread["id"], reason,
+        thread.get("turn_key") if reason != "stalled" and thread.get("turn_key")
+        else thread.get("updatedAt", ""),
+    ])
+    return payload
+
+
+def _legacy_event_id(payload, completion_key=None):
+    """Deterministic upgrade for queued events written before event IDs existed."""
+    return _content_key([
+        payload.get("source") or "t3", payload["thread_id"], payload.get("reason", ""),
+        completion_key or payload.get("completion_key") or payload.get("updated_at", ""),
+    ])
 
 
 def needs_attention(payload):
@@ -409,6 +422,8 @@ def deliver(payload, env):
     if credentials is None:
         return False
     url, key = credentials
+    payload = dict(payload)
+    payload.setdefault("event_id", _legacy_event_id(payload))
     data = json.dumps(payload).encode("utf-8")
     request = urllib.request.Request(
         url,
@@ -417,6 +432,7 @@ def deliver(payload, env):
         headers={
             "Authorization": "Bearer " + key,
             "Content-Type": "application/json",
+            "Idempotency-Key": payload["event_id"],
         },
     )
     opener = _webhook_opener()
@@ -470,7 +486,8 @@ def flush_outbox(state, env, now=None, save_path=None, dry_run=False):
     candidate = dict(state)
     changed = False
     for item in outbox:
-        payload = item["payload"]
+        payload = dict(item["payload"])
+        payload.setdefault("event_id", _legacy_event_id(payload, item.get("completion_key")))
         if deliver(payload, env):
             record = candidate.get(payload["thread_id"])
             if isinstance(record, dict):
@@ -504,15 +521,15 @@ def _matches(watched_id, snap):
 
 
 def _remember_local_completion(state, key):
-    # Bound tombstones for vanished transcripts; live records retain their last turn too.
+    # Keep content identities permanently, including after transcript paths vanish.
     recent = list(state.get("_local_completed") or [])
     if key not in recent:
         recent.append(key)
-    state["_local_completed"] = recent[-RECENT_LOCAL_COMPLETIONS:]
+    state["_local_completed"] = recent
 
 
 def _commit_observation(state, record, thread_id, payload, now, save_path, daybook_dir, watched_id=None,
-                        completed_key=None):
+                        completed_key=None, file_entries=None):
     """Persist one observation. A failed daybook write leaves the previous state in place."""
     if payload:
         append_daybook(payload, daybook_dir)
@@ -520,6 +537,12 @@ def _commit_observation(state, record, thread_id, payload, now, save_path, daybo
     if watched_id is not None:
         candidate.pop(watched_id, None)
     candidate[thread_id] = record
+    if file_entries is not None:
+        candidate["_files"] = {
+            path: entry for path, entry in state.get("_files", {}).items()
+            if entry.get("id") != thread_id
+        }
+        candidate["_files"].update(file_entries)
     if completed_key:
         _remember_local_completion(candidate, completed_key)
     if payload and needs_attention(payload):
@@ -1063,7 +1086,7 @@ def _prune_local_sessions(state):
     """Drop absent transcripts and their local records, never T3 thread state.
 
     The file index also identifies records written before source/path metadata
-    was added. Recent completion hashes and queued deliveries survive pruning.
+    was added. Persistent completion hashes and queued deliveries survive pruning.
     """
     index = state.get("_files")
     paths_by_id = {}
@@ -1092,7 +1115,7 @@ def _prune_local_sessions(state):
 
 
 def _track_files(state, observations, loose, unstable):
-    """Remember content signatures. The first index is a baseline."""
+    """Stage content signatures; publish each session with its observation."""
     previous_index = state.get("_files")
     seeding = not isinstance(previous_index, dict)
     if seeding:
@@ -1127,8 +1150,7 @@ def _track_files(state, observations, loose, unstable):
         previous = previous_index.get(path)
         if isinstance(previous, dict):
             seen[path] = previous
-    state["_files"] = seen
-    return seeding, changed
+    return seeding, changed, seen
 
 
 def _discover_observations(config):
@@ -1182,7 +1204,10 @@ def poll_local_sessions(
         sessions = [item["thread"] for item in observations]
         paths_by_id = {item["thread"]["id"]: [entry["path"] for entry in item["files"]]
                        for item in observations}
-        seeding, changed = _track_files(state, observations, loose, unstable)
+        seeding, changed, scanned_index = _track_files(state, observations, loose, unstable)
+        if seeding:
+            # Historic stopped files are intentionally ignored on the first scan.
+            state["_files"] = scanned_index
     completed = set(state.get("_local_completed") or [])
     completed.update(item["completion_key"] for item in state.get("_outbox", [])
                      if item.get("completion_key"))
@@ -1250,6 +1275,8 @@ def poll_local_sessions(
             _commit_observation(
                 state, record, thread_id, payload, now, save_path, daybook_dir,
                 completed_key=remembered_key,
+                file_entries={path: scanned_index[path] for path in paths_by_id[thread_id]}
+                if use_index else None,
             )
             if remembered_key:
                 completed.add(remembered_key)
@@ -1257,8 +1284,14 @@ def poll_local_sessions(
     except Exception:
         flush_outbox(state, environment, now, save_path, dry_run=dry_run)
         raise
-    if use_index and not committed:
-        save_state(state, save_path)
+    if use_index:
+        # All observations have now committed (or were intentionally skipped).
+        # Loose/unstable signatures and historic baseline entries can be saved.
+        if state.get("_files") != scanned_index or not committed:
+            candidate = dict(state, _files=scanned_index)
+            save_state(candidate, save_path)
+            state.clear()
+            state.update(candidate)
     return flush_outbox(state, environment, now, save_path, dry_run=dry_run)
 
 

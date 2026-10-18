@@ -1,0 +1,11 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 /tmp/t3dn-fv-fix/formal/check_crashes.py --product /tmp/t3dn-fv-fix/formal/.runs/seed-drop-outbox-7dc14zh4/t3_done_notify.py --scenario durable-outbox
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 1
+FAIL: outbox invariant failed at after save_state / process restart:
+1. _commit_observation persisted 'seeded-turn' as completed and remembered its completion key.
+2. After restart, _outbox has no matching payload and no webhook accepted it.
+3. poll_local_sessions treats that completion as already completed, so the notification is lost.
+
+Actual exit: 1
+Wall runtime seconds: 0.086049
+Recorded expectation matched: True

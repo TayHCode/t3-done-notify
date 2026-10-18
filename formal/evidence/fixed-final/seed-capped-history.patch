@@ -1,0 +1,11 @@
+--- a/t3_done_notify.py
++++ b/t3_done_notify.py
+@@ -525,7 +525,7 @@
+     recent = list(state.get("_local_completed") or [])
+     if key not in recent:
+         recent.append(key)
+-    state["_local_completed"] = recent
++    state["_local_completed"] = recent[-1:]  # FORMAL SEED: evict content identities
+ 
+ 
+ def _commit_observation(state, record, thread_id, payload, now, save_path, daybook_dir, watched_id=None,

@@ -1,0 +1,14 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 /tmp/t3dn-fv-fix/formal/check_crashes.py --product /tmp/t3dn-fv-fix/formal/.runs/seed-batch-index-cda_on36/t3_done_notify.py --scenario index-loss
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 0
+PASS INDEX RECOVERY: A and B each queued once after restart
+1. Start with persisted state {'_files': {}}; then create completed attention transcripts A and B.
+2. _track_files records both paths as changed; poll_local_sessions saves A's pending debounce record.
+3. Crash immediately after save_state replaces the state file. Disk has A's record/index; B remains unindexed and discoverable.
+4. Restart poll 1: recover both completions; outbox IDs are ['session-A'].
+5. Restart poll 2: recover both completions; outbox IDs are ['session-A', 'session-B'].
+6. Restart poll 3: recover both completions; outbox IDs are ['session-A', 'session-B'].
+
+Actual exit: 0
+Wall runtime seconds: 0.091584
+Recorded expectation matched: True

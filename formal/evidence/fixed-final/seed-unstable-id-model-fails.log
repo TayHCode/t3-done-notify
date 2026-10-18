@@ -1,0 +1,205 @@
+Command: $HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java -XX:+UseParallelGC -Xmx1g -cp $HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar tlc2.TLC -workers 1 -seed 1 -fp 0 -noGenerateSpecTE -difftrace -metadir /tmp/t3dn-fv-fix/formal/.runs/states-1232120-seed-unstable-id-model-fails -config /tmp/t3dn-fv-fix/formal/.runs/seed-unstable-id-9od6umdo/CrashIdempotent.cfg /tmp/t3dn-fv-fix/formal/Crash.tla
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 12
+TLC2 Version 2026.10.15.145915 (rev: 932d35e)
+Running breadth-first search Model-Checking with fp 0 and seed 1 with 1 worker on 16 cores with 910MB heap and 64MB offheap memory [pid: 1233351] (Linux 7.0.0-38-generic amd64, Eclipse Adoptium 21.0.12-patch1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/t3dn-fv-fix/formal/Crash.tla
+Parsing file /tmp/tlc-13372438502136743074/Naturals.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-13372438502136743074/FiniteSets.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-13372438502136743074/TLC.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-13372438502136743074/Sequences.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/Sequences.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module Crash
+Linting of module Crash
+Starting... (2026-10-18 22:42:11)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-10-18 22:42:11.
+Error: Invariant StableEventIdentity is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> {}, records |-> <<0>>, outbox |-> {}]
+/\ pc = "scan"
+/\ remaining = {}
+/\ disk = [files |-> {}, records |-> <<0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ identities = <<{}>>
+/\ record = 0
+/\ requestId = 1
+/\ received = <<0>>
+/\ keep = {}
+/\ committed = {}
+/\ crashes = 0
+/\ session = 1
+/\ memory = [files |-> {}, records |-> <<0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<0>>
+/\ temporary = [files |-> {}, records |-> <<0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 2: <Scan line 41, col 5 to line 47, col 51 of module Crash>
+/\ pc = "observe"
+/\ changed = {1}
+
+State 3: <Observe line 62, col 5 to line 69, col 61 of module Crash>
+/\ pc = "daybook"
+/\ record = 1
+
+State 4: <AppendDaybook line 75, col 5 to line 81, col 70 of module Crash>
+/\ pc = "build"
+
+State 5: <BuildObservation line 87, col 5 to line 95, col 51 of module Crash>
+/\ candidate = [files |-> {1}, records |-> <<1>>, outbox |-> {}]
+/\ pc = "write-temp"
+
+State 6: <WriteTemp line 100, col 5 to line 103, col 61 of module Crash>
+/\ pc = "replace"
+/\ temporary = [files |-> {1}, records |-> <<1>>, outbox |-> {}]
+
+State 7: <Replace line 108, col 5 to line 113, col 59 of module Crash>
+/\ pc = "publish"
+/\ disk = [files |-> {1}, records |-> <<1>>, outbox |-> {}]
+
+State 8: <Publish line 118, col 5 to line 122, col 61 of module Crash>
+/\ pc = "observe"
+/\ session = 2
+/\ memory = [files |-> {1}, records |-> <<1>>, outbox |-> {}]
+
+State 9: <StartFlush line 127, col 5 to line 132, col 51 of module Crash>
+/\ pc = "pick"
+
+State 10: <FinishFlush line 194, col 5 to line 200, col 51 of module Crash>
+/\ pc = "scan"
+/\ returnTo = "scan"
+
+State 11: <Scan line 41, col 5 to line 47, col 51 of module Crash>
+/\ pc = "observe"
+/\ session = 1
+/\ changed = {}
+
+State 12: <Observe line 62, col 5 to line 69, col 61 of module Crash>
+/\ pc = "daybook"
+/\ record = 2
+/\ payload = TRUE
+
+State 13: <AppendDaybook line 75, col 5 to line 81, col 70 of module Crash>
+/\ pc = "build"
+/\ daybook = <<1>>
+
+State 14: <BuildObservation line 87, col 5 to line 95, col 51 of module Crash>
+/\ candidate = [files |-> {1}, records |-> <<2>>, outbox |-> {1}]
+/\ pc = "write-temp"
+/\ returnTo = "observe"
+
+State 15: <WriteTemp line 100, col 5 to line 103, col 61 of module Crash>
+/\ pc = "replace"
+/\ temporary = [files |-> {1}, records |-> <<2>>, outbox |-> {1}]
+
+State 16: <Replace line 108, col 5 to line 113, col 59 of module Crash>
+/\ pc = "publish"
+/\ disk = [files |-> {1}, records |-> <<2>>, outbox |-> {1}]
+/\ committed = {1}
+
+State 17: <Publish line 118, col 5 to line 122, col 61 of module Crash>
+/\ pc = "observe"
+/\ session = 2
+/\ memory = [files |-> {1}, records |-> <<2>>, outbox |-> {1}]
+
+State 18: <StartFlush line 127, col 5 to line 132, col 51 of module Crash>
+/\ pc = "pick"
+/\ remaining = {1}
+
+State 19: <Pick line 137, col 5 to line 144, col 61 of module Crash>
+/\ pc = "send"
+
+State 20: <HttpAccept line 152, col 5 to line 158, col 57 of module Crash>
+/\ pc = "response"
+/\ identities = <<{1}>>
+/\ received = <<1>>
+
+State 21: <CrashProcess line 205, col 5 to line 211, col 77 of module Crash>
+/\ candidate = [files |-> {}, records |-> <<0>>, outbox |-> {}]
+/\ pc = "restart"
+/\ remaining = {}
+/\ record = 0
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> {}, records |-> <<0>>, outbox |-> {}]
+/\ payload = FALSE
+/\ temporary = [files |-> {}, records |-> <<0>>, outbox |-> {}]
+
+State 22: <Restart line 215, col 5 to line 218, col 70 of module Crash>
+/\ pc = "scan"
+/\ memory = [files |-> {1}, records |-> <<2>>, outbox |-> {1}]
+
+State 23: <Scan line 41, col 5 to line 47, col 51 of module Crash>
+/\ pc = "observe"
+
+State 24: <Observe line 62, col 5 to line 69, col 61 of module Crash>
+/\ pc = "daybook"
+/\ record = 2
+
+State 25: <AppendDaybook line 75, col 5 to line 81, col 70 of module Crash>
+/\ pc = "build"
+
+State 26: <BuildObservation line 87, col 5 to line 95, col 51 of module Crash>
+/\ candidate = [files |-> {1}, records |-> <<2>>, outbox |-> {1}]
+/\ pc = "write-temp"
+
+State 27: <WriteTemp line 100, col 5 to line 103, col 61 of module Crash>
+/\ pc = "replace"
+/\ temporary = [files |-> {1}, records |-> <<2>>, outbox |-> {1}]
+
+State 28: <Replace line 108, col 5 to line 113, col 59 of module Crash>
+/\ pc = "publish"
+
+State 29: <Publish line 118, col 5 to line 122, col 61 of module Crash>
+/\ pc = "observe"
+/\ session = 2
+
+State 30: <StartFlush line 127, col 5 to line 132, col 51 of module Crash>
+/\ pc = "pick"
+/\ remaining = {1}
+
+State 31: <Pick line 137, col 5 to line 144, col 61 of module Crash>
+/\ pc = "send"
+/\ remaining = {1}
+/\ requestId = 2
+
+State 32: <HttpAccept line 152, col 5 to line 158, col 57 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> {1}, records |-> <<2>>, outbox |-> {1}]
+/\ pc = "response"
+/\ remaining = {1}
+/\ disk = [files |-> {1}, records |-> <<2>>, outbox |-> {1}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ identities = <<{1, 2}>>
+/\ record = 2
+/\ requestId = 2
+/\ received = <<2>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 2
+/\ memory = [files |-> {1}, records |-> <<2>>, outbox |-> {1}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1>>
+/\ temporary = [files |-> {1}, records |-> <<2>>, outbox |-> {1}]
+/\ attempt = 1
+
+277 states generated, 234 distinct states found, 18 states left on queue.
+The depth of the complete state graph search is 32.
+Finished in 00s at (2026-10-18 22:42:11)
+
+Actual exit: 12
+Wall runtime seconds: 0.527436
+Recorded expectation matched: True
