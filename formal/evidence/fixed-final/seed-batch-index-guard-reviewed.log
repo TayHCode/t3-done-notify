@@ -1,0 +1,8 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 /tmp/t3dn-fv-fix/formal/check_guard.py --product /tmp/t3dn-fv-fix/formal/.runs/seed-batch-index-gx517shn/t3_done_notify.py --recorded /tmp/t3dn-fv-fix/formal/.runs/seed-batch-index-gx517shn/guarded.json
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 0
+PASS: guarded product hash 7b7339939d664472eefe7c7254ade3eac932fa69ce9aa83dc1ef015da549f451
+
+Actual exit: 0
+Wall runtime seconds: 0.036298
+Recorded expectation matched: True

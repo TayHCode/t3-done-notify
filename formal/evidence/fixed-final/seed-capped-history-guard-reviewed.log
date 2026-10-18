@@ -1,0 +1,8 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 /tmp/t3dn-fv-fix/formal/check_guard.py --product /tmp/t3dn-fv-fix/formal/.runs/seed-capped-history-_eoc650u/t3_done_notify.py --recorded /tmp/t3dn-fv-fix/formal/.runs/seed-capped-history-_eoc650u/guarded.json
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 0
+PASS: guarded product hash dce4589f6cb0684d58d8aa321f1ec888c0a68c541402cbcb3beebde17862c713
+
+Actual exit: 0
+Wall runtime seconds: 0.037452
+Recorded expectation matched: True

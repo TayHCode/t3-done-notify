@@ -63,7 +63,7 @@ class SessionStateTests(unittest.TestCase):
                 notify.poll_local_sessions(state, now=now, config=config)
             deliver.assert_not_called()
 
-    def test_pruned_completion_history_is_bounded(self):
+    def test_pruned_completion_history_is_retained(self):
         root = self.tmp_path / "claude"
         path = root / "project" / "example.jsonl"
         config = isolated_config(str(self.tmp_path), {
@@ -72,8 +72,7 @@ class SessionStateTests(unittest.TestCase):
             "WEBHOOK_URL": "http://localhost/hook", "WEBHOOK_KEY": "test-key",
         })
         state = {}
-        with mock.patch.object(notify, "RECENT_LOCAL_COMPLETIONS", 3), \
-                mock.patch.object(notify, "deliver", return_value=True) as deliver:
+        with mock.patch.object(notify, "deliver", return_value=True) as deliver:
             notify.poll_local_sessions(state, now=0, config=config)
             for turn in range(6):
                 session_id = f"session-{turn}"
@@ -88,7 +87,7 @@ class SessionStateTests(unittest.TestCase):
                 self.assertNotIn(session_id, state)
             self.assertEqual(deliver.call_count, 6)
         self.assertEqual(state["_files"], {})
-        self.assertEqual(len(state["_local_completed"]), 3)
+        self.assertEqual(len(state["_local_completed"]), 6)
         self.assertTrue(all(key.startswith("_") for key in state))
 
     def test_pending_delivery_survives_pruning_without_duplicate_queue(self):

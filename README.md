@@ -217,7 +217,7 @@ stay queued and are reported separately in the logs.
 ## Webhook contract and delivery
 
 The receiver gets `POST` JSON with `Authorization: Bearer <WEBHOOK_KEY>` and
-`Content-Type: application/json`. For example (all values are synthetic):
+`Content-Type: application/json` and a stable `Idempotency-Key` header. For example (all values are synthetic):
 
 ```json
 {
@@ -227,7 +227,8 @@ The receiver gets `POST` JSON with `Authorization: Bearer <WEBHOOK_KEY>` and
   "reason": "done",
   "updated_at": "2026-01-01T12:00:00Z",
   "last_message": "Could you approve the result?",
-  "source": "t3"
+  "source": "t3",
+  "event_id": "005ade536113ef9eb1c1d96e03adeff2f58142869b9c3b4d1ee1c02080d336d0"
 }
 ```
 
@@ -240,10 +241,17 @@ an apparently equivalent URL: configure the final receiver URL directly.
 Response bodies are not logged.
 
 Delivery can be duplicated if the receiver accepts a request but the response is
-lost or the process exits before persisting its acknowledgment. Receivers should
-handle duplicates, for example using `source`, `thread_id`, `reason`, and
-`updated_at` as a key. Disk or process failures can also cause a repeated daybook
-entry. This is a small polling tool, not an exactly-once messaging system.
+lost or the process exits before persisting its acknowledgment. Disk or process failures can also cause a repeated daybook entry. Delivery is at-least-once: exactly-once delivery cannot be guaranteed
+over HTTP. Every JSON payload includes a stable `event_id`, also sent as the
+`Idempotency-Key` HTTP header. Receivers should durably dedupe on this key before
+applying side effects; retries after timeouts or acknowledgement crashes carry
+the same key. Existing reason, status, updated_at, last_message and source
+fields are unchanged. Legacy queued events receive a deterministic identity
+based on their stored completion key or timestamp.
+
+Local completion identities are stored persistently without a cap, independent
+of transcript paths. Renaming or rotating unchanged content does not notify
+again. State storage grows with the number of distinct completed turns.
 
 ## Security and operations
 

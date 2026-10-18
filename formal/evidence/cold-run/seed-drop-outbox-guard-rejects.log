@@ -1,0 +1,12 @@
+Command: /usr/bin/python3 $REPO/formal/check_guard.py --product $REPO/formal/.runs/seed-drop-outbox-euq6u4v0/t3_done_notify.py
+Working directory: $REPO
+Expected exit: 1
+FAIL: t3_done_notify.py changed since the model was reviewed.
+Follow .claude/skills/verify-watcher/SKILL.md; review/mirror the code
+change before recording a new hash in formal/guarded.json.
+Recorded: 150a7304f317847d1098b963c306cdd622fd582a19349d85b327dce62434cfb0
+Actual:   a6fb0f692045861b5bc49a749bd7d5735def91f1e03d2a4ef8a6ca7682fab004
+
+Actual exit: 1
+Wall runtime seconds: 0.035434
+Recorded expectation matched: True

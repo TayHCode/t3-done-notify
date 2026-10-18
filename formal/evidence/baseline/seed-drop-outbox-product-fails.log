@@ -1,0 +1,11 @@
+Command: /usr/bin/python3 $REPO/formal/check_crashes.py --product $REPO/formal/.runs/seed-drop-outbox-6wld5ht9/t3_done_notify.py --scenario durable-outbox
+Working directory: $REPO
+Expected exit: 1
+FAIL: outbox invariant failed at after save_state / process restart:
+1. _commit_observation persisted 'seeded-turn' as completed and remembered its completion key.
+2. After restart, _outbox has no matching payload and no webhook accepted it.
+3. poll_local_sessions treats that completion as already completed, so the notification is lost.
+
+Actual exit: 1
+Wall runtime seconds: 0.090057
+Recorded expectation matched: True

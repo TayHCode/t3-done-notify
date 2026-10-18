@@ -1,0 +1,12 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 /tmp/t3dn-fv-fix/formal/check_guard.py --product /tmp/t3dn-fv-fix/formal/.runs/seed-bypass-dedupe-0nf64zpz/t3_done_notify.py
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 1
+FAIL: t3_done_notify.py changed since the model was reviewed.
+Follow .claude/skills/verify-watcher/SKILL.md; review/mirror the code
+change before recording a new hash in formal/guarded.json.
+Recorded: b3e9c729731cba1d3fb48329c398f240a83ce40e8657f96d28f20fa5804bd204
+Actual:   ce50e0a270460ec6472695f7b14b2e264238c3fb029c4f94340e3f902c5e68e7
+
+Actual exit: 1
+Wall runtime seconds: 0.036819
+Recorded expectation matched: True

@@ -1,0 +1,982 @@
+Command: $HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java -XX:+UseParallelGC -Xmx1g -cp $HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar tlc2.TLC -workers 1 -seed 1 -fp 0 -noGenerateSpecTE -difftrace -metadir $REPO/formal/.runs/states-965214-baseline-no-loss-liveness -config $REPO/formal/CrashLiveness.cfg $REPO/formal/Crash.tla
+Working directory: $REPO
+Expected exit: 13
+TLC2 Version 2026.10.15.145915 (rev: 932d35e)
+Running breadth-first search Model-Checking with fp 0 and seed 1 with 1 worker on 16 cores with 910MB heap and 64MB offheap memory [pid: 965636] (Linux 7.0.0-38-generic amd64, Eclipse Adoptium 21.0.12-patch1 64bit, MSBDiskFPSet, DiskStateQueue).
+Parsing file $REPO/formal/Crash.tla
+Parsing file /tmp/tlc-8599353822671447213/Naturals.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /tmp/tlc-8599353822671447213/FiniteSets.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Parsing file /tmp/tlc-8599353822671447213/TLC.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /tmp/tlc-8599353822671447213/Sequences.tla (jar:file:$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar!/tla2sany/StandardModules/Sequences.tla)
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module Crash
+Linting of module Crash
+Starting... (2026-10-18 21:39:51)
+Implied-temporal checking--satisfiability problem has 1 branches.
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-10-18 21:39:51.
+Progress(89) at 2026-10-18 21:39:51: 883 states generated, 768 distinct states found, 0 states left on queue.
+Checking temporal properties for the complete state space with 768 total distinct states at (2026-10-18 21:39:51)
+Error: Temporal property EventuallyDelivered was violated.
+
+Error: The following behavior constitutes a counter-example:
+
+State 1: <Initial predicate>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ pc = "scan"
+/\ remaining = {}
+/\ disk = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 0
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {}
+/\ crashes = 0
+/\ session = 1
+/\ memory = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<0, 0>>
+/\ temporary = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 2: <Scan line 40, col 5 to line 46, col 39 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ pc = "observe"
+/\ remaining = {}
+/\ disk = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 0
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {}
+/\ crashes = 0
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<0, 0>>, outbox |-> {}]
+/\ changed = {1, 2}
+/\ payload = FALSE
+/\ daybook = <<0, 0>>
+/\ temporary = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 3: <Observe line 61, col 5 to line 68, col 49 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ pc = "daybook"
+/\ remaining = {}
+/\ disk = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 1
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {}
+/\ crashes = 0
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<0, 0>>, outbox |-> {}]
+/\ changed = {1, 2}
+/\ payload = FALSE
+/\ daybook = <<0, 0>>
+/\ temporary = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 4: <AppendDaybook line 74, col 5 to line 80, col 58 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ pc = "build"
+/\ remaining = {}
+/\ disk = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 1
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {}
+/\ crashes = 0
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<0, 0>>, outbox |-> {}]
+/\ changed = {1, 2}
+/\ payload = FALSE
+/\ daybook = <<0, 0>>
+/\ temporary = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 5: <BuildObservation line 86, col 5 to line 93, col 39 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ pc = "write-temp"
+/\ remaining = {}
+/\ disk = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 1
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {}
+/\ crashes = 0
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<0, 0>>, outbox |-> {}]
+/\ changed = {1, 2}
+/\ payload = FALSE
+/\ daybook = <<0, 0>>
+/\ temporary = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 6: <WriteTemp line 98, col 5 to line 101, col 49 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ pc = "replace"
+/\ remaining = {}
+/\ disk = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 1
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {}
+/\ crashes = 0
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<0, 0>>, outbox |-> {}]
+/\ changed = {1, 2}
+/\ payload = FALSE
+/\ daybook = <<0, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 7: <Replace line 106, col 5 to line 111, col 47 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ pc = "publish"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 1
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {}
+/\ crashes = 0
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<0, 0>>, outbox |-> {}]
+/\ changed = {1, 2}
+/\ payload = FALSE
+/\ daybook = <<0, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 8: <CrashProcess line 196, col 5 to line 202, col 65 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ pc = "restart"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 0
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<0, 0>>
+/\ temporary = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 9: <Restart line 206, col 5 to line 209, col 58 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ pc = "scan"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 0
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<0, 0>>
+/\ temporary = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 10: <Scan line 40, col 5 to line 46, col 39 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ pc = "observe"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 0
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<0, 0>>
+/\ temporary = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 11: <Observe line 61, col 5 to line 68, col 49 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ pc = "daybook"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = TRUE
+/\ daybook = <<0, 0>>
+/\ temporary = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 12: <AppendDaybook line 74, col 5 to line 80, col 58 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ pc = "build"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = TRUE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 13: <BuildObservation line 86, col 5 to line 93, col 39 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ pc = "write-temp"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = TRUE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> {}, records |-> <<0, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 14: <WriteTemp line 98, col 5 to line 101, col 49 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ pc = "replace"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = TRUE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ attempt = 1
+
+State 15: <Replace line 106, col 5 to line 111, col 47 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ pc = "publish"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<1, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = TRUE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ attempt = 1
+
+State 16: <Publish line 116, col 5 to line 120, col 49 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ pc = "observe"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 2
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ changed = {}
+/\ payload = TRUE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ attempt = 1
+
+State 17: <Skip line 51, col 5 to line 56, col 58 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ pc = "observe"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 3
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ changed = {}
+/\ payload = TRUE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ attempt = 1
+
+State 18: <StartFlush line 125, col 5 to line 130, col 39 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ pc = "pick"
+/\ remaining = {1}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 3
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ changed = {}
+/\ payload = TRUE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ attempt = 1
+
+State 19: <Pick line 135, col 5 to line 140, col 49 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ pc = "send"
+/\ remaining = {1}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<0, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 3
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ changed = {}
+/\ payload = TRUE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ attempt = 1
+
+State 20: <HttpAccept line 145, col 5 to line 149, col 57 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ pc = "response"
+/\ remaining = {1}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 3
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ changed = {}
+/\ payload = TRUE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ attempt = 1
+
+State 21: <Http2xx line 162, col 5 to line 166, col 39 of module Crash>
+/\ successful = TRUE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ pc = "pick"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 3
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ changed = {}
+/\ payload = TRUE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ attempt = 1
+
+State 22: <FinishFlush line 185, col 5 to line 191, col 39 of module Crash>
+/\ successful = TRUE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "write-temp"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ returnTo = "scan"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 3
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ changed = {}
+/\ payload = TRUE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ attempt = 1
+
+State 23: <WriteTemp line 98, col 5 to line 101, col 49 of module Crash>
+/\ successful = TRUE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "replace"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ returnTo = "scan"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 3
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ changed = {}
+/\ payload = TRUE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 24: <Replace line 106, col 5 to line 111, col 47 of module Crash>
+/\ successful = TRUE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "publish"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "scan"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 3
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {1}]
+/\ changed = {}
+/\ payload = TRUE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 25: <Publish line 116, col 5 to line 120, col 49 of module Crash>
+/\ successful = TRUE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "scan"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "scan"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 3
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = TRUE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 26: <Scan line 40, col 5 to line 46, col 39 of module Crash>
+/\ successful = TRUE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "observe"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "scan"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = TRUE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 27: <Observe line 61, col 5 to line 68, col 49 of module Crash>
+/\ successful = TRUE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "daybook"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "scan"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 28: <AppendDaybook line 74, col 5 to line 80, col 58 of module Crash>
+/\ successful = TRUE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "build"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "scan"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 29: <BuildObservation line 86, col 5 to line 93, col 39 of module Crash>
+/\ successful = TRUE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "write-temp"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 30: <WriteTemp line 98, col 5 to line 101, col 49 of module Crash>
+/\ successful = TRUE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "replace"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 31: <Replace line 106, col 5 to line 111, col 47 of module Crash>
+/\ successful = TRUE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "publish"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 32: <Publish line 116, col 5 to line 120, col 49 of module Crash>
+/\ successful = TRUE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "observe"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 2
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 33: <Skip line 51, col 5 to line 56, col 58 of module Crash>
+/\ successful = TRUE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "observe"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 3
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 34: <StartFlush line 125, col 5 to line 130, col 39 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "pick"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 3
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 35: <FinishFlush line 185, col 5 to line 191, col 39 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "scan"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "scan"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 3
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 36: <Scan line 40, col 5 to line 46, col 39 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "observe"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "scan"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 37: <Observe line 61, col 5 to line 68, col 49 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "daybook"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "scan"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 38: <AppendDaybook line 74, col 5 to line 80, col 58 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "build"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "scan"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 39: <BuildObservation line 86, col 5 to line 93, col 39 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "write-temp"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 40: <WriteTemp line 98, col 5 to line 101, col 49 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "replace"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 41: <Replace line 106, col 5 to line 111, col 47 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "publish"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 1
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 42: <Publish line 116, col 5 to line 120, col 49 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "observe"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 2
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+State 43: <Skip line 51, col 5 to line 56, col 58 of module Crash>
+/\ successful = FALSE
+/\ failures = 0
+/\ candidate = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ pc = "observe"
+/\ remaining = {}
+/\ disk = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ returnTo = "observe"
+/\ sending = 1
+/\ record = 2
+/\ received = <<1, 0>>
+/\ keep = {}
+/\ committed = {1}
+/\ crashes = 1
+/\ session = 3
+/\ memory = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ changed = {}
+/\ payload = FALSE
+/\ daybook = <<1, 0>>
+/\ temporary = [files |-> 1..2, records |-> <<2, 0>>, outbox |-> {}]
+/\ attempt = 1
+
+Back to state 34: <StartFlush line 125, col 5 to line 130, col 39 of module Crash>
+
+Finished checking temporal properties in 00s at 2026-10-18 21:39:51
+883 states generated, 768 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 89.
+Finished in 00s at (2026-10-18 21:39:51)
+
+Actual exit: 13
+Wall runtime seconds: 0.514352
+Recorded expectation matched: True

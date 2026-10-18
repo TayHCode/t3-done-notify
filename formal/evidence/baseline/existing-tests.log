@@ -1,0 +1,12 @@
+Command: /usr/bin/python3 -m unittest discover -s tests -q
+Working directory: $REPO
+Expected exit: 0
+webhook attempt 1/1 failed (HTTP 302)
+----------------------------------------------------------------------
+Ran 80 tests in 16.609s
+
+OK
+
+Actual exit: 0
+Wall runtime seconds: 16.723992
+Recorded expectation matched: True

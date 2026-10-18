@@ -1,0 +1,11 @@
+--- a/t3_done_notify.py
++++ b/t3_done_notify.py
+@@ -550,7 +550,7 @@
+         queued = {"payload": payload, "queued_at": now}
+         if completed_key:
+             queued["completion_key"] = completed_key
+-        candidate["_outbox"].append(queued)
++        pass  # FORMAL SEED: discard attention event before save_state
+     save_state(candidate, save_path)
+     state.clear()
+     state.update(candidate)

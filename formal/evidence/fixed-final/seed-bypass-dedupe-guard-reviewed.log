@@ -1,0 +1,8 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 /tmp/t3dn-fv-fix/formal/check_guard.py --product /tmp/t3dn-fv-fix/formal/.runs/seed-bypass-dedupe-0nf64zpz/t3_done_notify.py --recorded /tmp/t3dn-fv-fix/formal/.runs/seed-bypass-dedupe-0nf64zpz/guarded.json
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 0
+PASS: guarded product hash ce50e0a270460ec6472695f7b14b2e264238c3fb029c4f94340e3f902c5e68e7
+
+Actual exit: 0
+Wall runtime seconds: 0.040473
+Recorded expectation matched: True

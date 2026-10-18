@@ -1,0 +1,21 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 /tmp/t3dn-fv-fix/formal/check_crashes.py
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 0
+PASS INDEX RECOVERY: A and B each queued once after restart
+1. Start with persisted state {'_files': {}}; then create completed attention transcripts A and B.
+2. _track_files records both paths as changed; poll_local_sessions saves A's pending debounce record.
+3. Crash immediately after save_state replaces the state file. Disk has A's record/index; B remains unindexed and discoverable.
+4. Restart poll 1: recover both completions; outbox IDs are ['session-A'].
+5. Restart poll 2: recover both completions; outbox IDs are ['session-A', 'session-B'].
+6. Restart poll 3: recover both completions; outbox IDs are ['session-A', 'session-B'].
+DURABLE-OUTBOX REPLAY: PASS
+1. _commit_observation saves a done record and matching _outbox item; restart retains both.
+2. Crash before os.replace leaves the old state and a daybook append; re-observation retries the commit and queues the payload.
+3. Crash after os.replace leaves the done record and queued payload on disk; a failed webhook attempt keeps it queued across restart.
+1. A webhook acceptance followed by a crash before flush_outbox saves its acknowledgement causes one retry duplicate; the retry then removes the queue item.
+webhook attempt 1/5 failed (TimeoutError)
+2. PASS stable event_id and Idempotency-Key across real deliver lost-response retries; receiver deduplication yields one effect.
+
+Actual exit: 0
+Wall runtime seconds: 0.083351
+Recorded expectation matched: True

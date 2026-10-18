@@ -1,0 +1,648 @@
+{
+  "status": "baseline findings reproduced",
+  "total_wall_seconds": 30.635959,
+  "problems": [],
+  "checks": [
+    {
+      "check": "guard",
+      "command": [
+        "/usr/bin/python3",
+        "$REPO/formal/check_guard.py"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.037023,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "versions-java",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-version"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.018298,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "versions-python",
+      "command": [
+        "/usr/bin/python3",
+        "-c",
+        "import sys, websockets; print(sys.version); print('websockets', websockets.__version__)"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.036908,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "baseline-index-loss",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "$REPO/formal/.runs/states-965214-baseline-index-loss",
+        "-config",
+        "$REPO/formal/Crash.cfg",
+        "$REPO/formal/Crash.tla"
+      ],
+      "exit": 12,
+      "expected_exit": 12,
+      "wall_seconds": 0.376148,
+      "matched": true,
+      "tlc_statistics": [
+        "20 states generated, 15 distinct states found, 2 states left on queue.",
+        "The depth of the complete state graph search is 8."
+      ]
+    },
+    {
+      "check": "baseline-no-loss-liveness",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "$REPO/formal/.runs/states-965214-baseline-no-loss-liveness",
+        "-config",
+        "$REPO/formal/CrashLiveness.cfg",
+        "$REPO/formal/Crash.tla"
+      ],
+      "exit": 13,
+      "expected_exit": 13,
+      "wall_seconds": 0.514352,
+      "matched": true,
+      "tlc_statistics": [
+        "Progress(89) at 2026-10-18 21:39:51: 883 states generated, 768 distinct states found, 0 states left on queue.",
+        "883 states generated, 768 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 89."
+      ]
+    },
+    {
+      "check": "baseline-durable-outbox",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "$REPO/formal/.runs/states-965214-baseline-durable-outbox",
+        "-config",
+        "$REPO/formal/CrashDurable.cfg",
+        "$REPO/formal/Crash.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.478963,
+      "matched": true,
+      "tlc_statistics": [
+        "3099 states generated, 2610 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 89."
+      ]
+    },
+    {
+      "check": "baseline-five-retries",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "$REPO/formal/.runs/states-965214-baseline-five-retries",
+        "-config",
+        "$REPO/formal/CrashRetry.cfg",
+        "$REPO/formal/Crash.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.571203,
+      "matched": true,
+      "tlc_statistics": [
+        "Progress(67) at 2026-10-18 21:39:52: 2,460 states generated, 2,003 distinct states found, 0 states left on queue.",
+        "2460 states generated, 2003 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 67."
+      ]
+    },
+    {
+      "check": "baseline-webhook-duplicate",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "$REPO/formal/.runs/states-965214-baseline-webhook-duplicate",
+        "-config",
+        "$REPO/formal/CrashDuplicate.cfg",
+        "$REPO/formal/Crash.tla"
+      ],
+      "exit": 12,
+      "expected_exit": 12,
+      "wall_seconds": 0.383143,
+      "matched": true,
+      "tlc_statistics": [
+        "100 states generated, 82 distinct states found, 10 states left on queue.",
+        "The depth of the complete state graph search is 22."
+      ]
+    },
+    {
+      "check": "baseline-rotation-eviction",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "$REPO/formal/.runs/states-965214-baseline-rotation-eviction",
+        "-config",
+        "$REPO/formal/Dedupe.cfg",
+        "$REPO/formal/Dedupe.tla"
+      ],
+      "exit": 12,
+      "expected_exit": 12,
+      "wall_seconds": 1.951838,
+      "matched": true,
+      "tlc_statistics": [
+        "190423 states generated, 89605 distinct states found, 5359 states left on queue.",
+        "The depth of the complete state graph search is 36."
+      ]
+    },
+    {
+      "check": "baseline-retained-record",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "$REPO/formal/.runs/states-965214-baseline-retained-record",
+        "-config",
+        "$REPO/formal/DedupeRetained.cfg",
+        "$REPO/formal/Dedupe.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.584708,
+      "matched": true,
+      "tlc_statistics": [
+        "8891 states generated, 6458 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 48."
+      ]
+    },
+    {
+      "check": "baseline-retained-history",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "$REPO/formal/.runs/states-965214-baseline-retained-history",
+        "-config",
+        "$REPO/formal/DedupeHistory.cfg",
+        "$REPO/formal/Dedupe.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 2.907808,
+      "matched": true,
+      "tlc_statistics": [
+        "472967 states generated, 187730 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 62."
+      ]
+    },
+    {
+      "check": "baseline-product-transition",
+      "command": [
+        "/usr/bin/python3",
+        "$REPO/formal/check_transition.py"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.057803,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "baseline-product-crashes",
+      "command": [
+        "/usr/bin/python3",
+        "$REPO/formal/check_crashes.py"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.093158,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "baseline-product-dedupe",
+      "command": [
+        "/usr/bin/python3",
+        "$REPO/formal/check_dedupe.py"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.251445,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-drop-outbox-guard-rejects",
+      "command": [
+        "/usr/bin/python3",
+        "$REPO/formal/check_guard.py",
+        "--product",
+        "$REPO/formal/.runs/seed-drop-outbox-euq6u4v0/t3_done_notify.py"
+      ],
+      "exit": 1,
+      "expected_exit": 1,
+      "wall_seconds": 0.035434,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-drop-outbox-guard-reviewed",
+      "command": [
+        "/usr/bin/python3",
+        "$REPO/formal/check_guard.py",
+        "--product",
+        "$REPO/formal/.runs/seed-drop-outbox-euq6u4v0/t3_done_notify.py",
+        "--recorded",
+        "$REPO/formal/.runs/seed-drop-outbox-euq6u4v0/guarded.json"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.035292,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-drop-outbox-model-fails",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "$REPO/formal/.runs/states-965214-seed-drop-outbox-model-fails",
+        "-config",
+        "$REPO/formal/.runs/seed-drop-outbox-euq6u4v0/CrashRetry.cfg",
+        "$REPO/formal/Crash.tla"
+      ],
+      "exit": 12,
+      "expected_exit": 12,
+      "wall_seconds": 0.383735,
+      "matched": true,
+      "tlc_statistics": [
+        "49 states generated, 38 distinct states found, 3 states left on queue.",
+        "The depth of the complete state graph search is 15."
+      ]
+    },
+    {
+      "check": "seed-drop-outbox-product-fails",
+      "command": [
+        "/usr/bin/python3",
+        "$REPO/formal/check_crashes.py",
+        "--product",
+        "$REPO/formal/.runs/seed-drop-outbox-euq6u4v0/t3_done_notify.py",
+        "--scenario",
+        "durable-outbox"
+      ],
+      "exit": 1,
+      "expected_exit": 1,
+      "wall_seconds": 0.083002,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-drop-outbox-revert-guard",
+      "command": [
+        "/usr/bin/python3",
+        "$REPO/formal/check_guard.py",
+        "--product",
+        "$REPO/formal/.runs/seed-drop-outbox-euq6u4v0/t3_done_notify.py"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.03608,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-drop-outbox-revert-model",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "$REPO/formal/.runs/states-965214-seed-drop-outbox-revert-model",
+        "-config",
+        "$REPO/formal/CrashRetry.cfg",
+        "$REPO/formal/Crash.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.616732,
+      "matched": true,
+      "tlc_statistics": [
+        "Progress(67) at 2026-10-18 21:39:59: 2,460 states generated, 2,003 distinct states found, 0 states left on queue.",
+        "2460 states generated, 2003 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 67."
+      ]
+    },
+    {
+      "check": "seed-drop-outbox-revert-product",
+      "command": [
+        "/usr/bin/python3",
+        "$REPO/formal/check_crashes.py",
+        "--product",
+        "$REPO/formal/.runs/seed-drop-outbox-euq6u4v0/t3_done_notify.py",
+        "--scenario",
+        "durable-outbox"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.086352,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-bypass-dedupe-guard-rejects",
+      "command": [
+        "/usr/bin/python3",
+        "$REPO/formal/check_guard.py",
+        "--product",
+        "$REPO/formal/.runs/seed-bypass-dedupe-kimv55yd/t3_done_notify.py"
+      ],
+      "exit": 1,
+      "expected_exit": 1,
+      "wall_seconds": 0.036165,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-bypass-dedupe-guard-reviewed",
+      "command": [
+        "/usr/bin/python3",
+        "$REPO/formal/check_guard.py",
+        "--product",
+        "$REPO/formal/.runs/seed-bypass-dedupe-kimv55yd/t3_done_notify.py",
+        "--recorded",
+        "$REPO/formal/.runs/seed-bypass-dedupe-kimv55yd/guarded.json"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.036595,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-bypass-dedupe-model-fails",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "$REPO/formal/.runs/states-965214-seed-bypass-dedupe-model-fails",
+        "-config",
+        "$REPO/formal/.runs/seed-bypass-dedupe-kimv55yd/DedupeHistory.cfg",
+        "$REPO/formal/Dedupe.tla"
+      ],
+      "exit": 12,
+      "expected_exit": 12,
+      "wall_seconds": 1.291417,
+      "matched": true,
+      "tlc_statistics": [
+        "133644 states generated, 59965 distinct states found, 6141 states left on queue.",
+        "The depth of the complete state graph search is 28."
+      ]
+    },
+    {
+      "check": "seed-bypass-dedupe-product-fails",
+      "command": [
+        "/usr/bin/python3",
+        "$REPO/formal/check_dedupe.py",
+        "--product",
+        "$REPO/formal/.runs/seed-bypass-dedupe-kimv55yd/t3_done_notify.py",
+        "--scenario",
+        "ordinary"
+      ],
+      "exit": 1,
+      "expected_exit": 1,
+      "wall_seconds": 0.075574,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-bypass-dedupe-revert-guard",
+      "command": [
+        "/usr/bin/python3",
+        "$REPO/formal/check_guard.py",
+        "--product",
+        "$REPO/formal/.runs/seed-bypass-dedupe-kimv55yd/t3_done_notify.py"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.036547,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "seed-bypass-dedupe-revert-model",
+      "command": [
+        "$HOME/.local/share/fv-tools/t3-done-notify/jdk-21.0.12-patch1+1/bin/java",
+        "-XX:+UseParallelGC",
+        "-Xmx1g",
+        "-cp",
+        "$HOME/.local/share/fv-tools/t3-done-notify/tla2tools-1.8.0.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-seed",
+        "1",
+        "-fp",
+        "0",
+        "-noGenerateSpecTE",
+        "-difftrace",
+        "-metadir",
+        "$REPO/formal/.runs/states-965214-seed-bypass-dedupe-revert-model",
+        "-config",
+        "$REPO/formal/DedupeHistory.cfg",
+        "$REPO/formal/Dedupe.tla"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 2.782,
+      "matched": true,
+      "tlc_statistics": [
+        "472967 states generated, 187730 distinct states found, 0 states left on queue.",
+        "The depth of the complete state graph search is 62."
+      ]
+    },
+    {
+      "check": "seed-bypass-dedupe-revert-product",
+      "command": [
+        "/usr/bin/python3",
+        "$REPO/formal/check_dedupe.py",
+        "--product",
+        "$REPO/formal/.runs/seed-bypass-dedupe-kimv55yd/t3_done_notify.py",
+        "--scenario",
+        "ordinary"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.069995,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "existing-tests",
+      "command": [
+        "/usr/bin/python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-q"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 16.137356,
+      "matched": true,
+      "tlc_statistics": []
+    },
+    {
+      "check": "final-guard",
+      "command": [
+        "/usr/bin/python3",
+        "$REPO/formal/check_guard.py"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "wall_seconds": 0.037274,
+      "matched": true,
+      "tlc_statistics": []
+    }
+  ]
+}

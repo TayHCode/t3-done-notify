@@ -1,0 +1,8 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 /tmp/t3dn-fv-fix/formal/check_crashes.py --product /tmp/t3dn-fv-fix/formal/.runs/seed-batch-index-cda_on36/t3_done_notify.py --scenario index-loss
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 1
+FAIL: index recovery invariant failed: B index advanced before its observation
+
+Actual exit: 1
+Wall runtime seconds: 0.092820
+Recorded expectation matched: True

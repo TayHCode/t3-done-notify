@@ -1,0 +1,8 @@
+Command: /usr/bin/python3 $REPO/formal/check_guard.py --product $REPO/formal/.runs/seed-drop-outbox-euq6u4v0/t3_done_notify.py
+Working directory: $REPO
+Expected exit: 0
+PASS: guarded product hash 150a7304f317847d1098b963c306cdd622fd582a19349d85b327dce62434cfb0
+
+Actual exit: 0
+Wall runtime seconds: 0.036080
+Recorded expectation matched: True

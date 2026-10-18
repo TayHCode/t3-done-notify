@@ -1,0 +1,8 @@
+Command: /usr/bin/python3 $REPO/formal/check_dedupe.py --product $REPO/formal/.runs/seed-bypass-dedupe-kimv55yd/t3_done_notify.py --scenario ordinary
+Working directory: $REPO
+Expected exit: 1
+FAIL duplicate completion enqueue [ordinary same-content replay]: session-A (+1)
+
+Actual exit: 1
+Wall runtime seconds: 0.075574
+Recorded expectation matched: True

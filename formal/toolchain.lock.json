@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "jdk": {
+    "distribution": "Eclipse Temurin",
+    "sha256": "ce79869e1307ed8ee1e2baa86a412b1eb5b75d10a01006d788a6f968bcfaee94",
+    "version_components": [
+      21,
+      0,
+      12,
+      1
+    ],
+    "build": 1,
+    "platform": "x64_linux_hotspot",
+    "release_base_url": "https://github.com/adoptium/temurin21-binaries/releases/download",
+    "sha256_source": "Adjacent archive URL with .sha256.txt suffix"
+  },
+  "tla": {
+    "distribution": "TLA+",
+    "version": "1.8.0",
+    "release_channel": "GitHub prerelease published 2026-10-15",
+    "artifact": "tla2tools.jar",
+    "url": "https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar",
+    "sha256": "15d103b7e5617780bcc904c0af12f1ad242e2b345c0301136c5be4588f17edac",
+    "sha256_source": "https://api.github.com/repos/tlaplus/tlaplus/releases/tags/v1.8.0",
+    "sha256_source_detail": "assets[name=tla2tools.jar].digest"
+  }
+}

@@ -541,7 +541,7 @@ class WatcherPostTests(unittest.TestCase):
                 for item in received:
                     self.assertEqual(set(item), {
                         "thread_id", "title", "status", "reason",
-                        "updated_at", "last_message", "source",
+                        "updated_at", "last_message", "source", "event_id",
                     })
                     keys.append((item["source"], item["reason"], item["thread_id"]))
                 self.assertEqual(sorted(keys), sorted([

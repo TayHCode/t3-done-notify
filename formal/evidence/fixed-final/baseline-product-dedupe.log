@@ -1,0 +1,10 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 /tmp/t3dn-fv-fix/formal/check_dedupe.py
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 0
+PASS ordinary touch/rewrite/replacement/rename with persistent completion identities: A and B each delivered once
+PASS simultaneous same-content rotations: both sessions delivered once
+PASS unchanged rename after 2048 vanished completed records: A delivered once
+
+Actual exit: 0
+Wall runtime seconds: 0.222126
+Recorded expectation matched: True

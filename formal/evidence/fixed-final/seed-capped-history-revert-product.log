@@ -1,0 +1,8 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 /tmp/t3dn-fv-fix/formal/check_dedupe.py --product /tmp/t3dn-fv-fix/formal/.runs/seed-capped-history-_eoc650u/t3_done_notify.py --scenario rotation
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 0
+PASS simultaneous same-content rotations: both sessions delivered once
+
+Actual exit: 0
+Wall runtime seconds: 0.075779
+Recorded expectation matched: True

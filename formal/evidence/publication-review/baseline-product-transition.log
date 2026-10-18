@@ -1,0 +1,9 @@
+Command: /tmp/t3dn-fv-fix/.venv/bin/python3 /tmp/t3dn-fv-fix/formal/check_transition.py
+Working directory: /tmp/t3dn-fv-fix
+Expected exit: 0
+PASS: 24 actual transition calls; debounce=10s partitions absent/9/10/11s crossed with active=false/true; stall=2700.0s partitions invalid/fresh/at-threshold and marker none/equal/different; repeated same/new updatedAt.
+Scope: bounded executable checks of transition only; not a TLA proof of the full watcher or filesystem/outbox behavior.
+
+Actual exit: 0
+Wall runtime seconds: 0.057885
+Recorded expectation matched: True

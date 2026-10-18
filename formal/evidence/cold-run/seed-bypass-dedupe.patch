@@ -1,0 +1,11 @@
+--- a/t3_done_notify.py
++++ b/t3_done_notify.py
+@@ -1226,7 +1226,7 @@
+                 or _content_key([thread_id, fired]) in completed
+             ):
+                 already_completed = True
+-            if already_completed:
++            if False:  # FORMAL SEED: bypass completed-turn suppression
+                 record.update(active=False, pending_since=None, pending_status=None)
+                 payload = None
+             else:
