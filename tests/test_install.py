@@ -12,8 +12,29 @@ INSTALL = os.path.join(ROOT, "install.sh")
 def install_env(home, **extra):
     environment = os.environ.copy()
     environment["HOME"] = home
-    environment.pop("XDG_CONFIG_HOME", None)
-    environment.pop("XDG_STATE_HOME", None)
+    for key in list(environment):
+        if key.startswith("XDG_"):
+            environment.pop(key)
+    xdg_paths = {
+        "XDG_CONFIG_HOME": os.path.join(home, ".config"),
+        "XDG_STATE_HOME": os.path.join(home, ".local", "state"),
+        "XDG_CACHE_HOME": os.path.join(home, ".cache"),
+        "XDG_DATA_HOME": os.path.join(home, ".local", "share"),
+        "XDG_RUNTIME_DIR": os.path.join(home, ".runtime"),
+    }
+    for path in xdg_paths.values():
+        os.makedirs(path, exist_ok=True)
+    os.chmod(xdg_paths["XDG_RUNTIME_DIR"], 0o700)
+    environment.update(xdg_paths)
+
+    stub_dir = os.path.join(home, "bin")
+    os.makedirs(stub_dir, exist_ok=True)
+    for command in ("systemctl", "launchctl"):
+        stub = os.path.join(stub_dir, command)
+        with open(stub, "w", encoding="utf-8") as handle:
+            handle.write("#!/bin/sh\nexit 0\n")
+        os.chmod(stub, 0o755)
+    environment["PATH"] = stub_dir + os.pathsep + environment.get("PATH", "")
     environment.pop("CLAUDE_PROJECTS_DIR", None)
     environment.pop("CODEX_SESSIONS_DIR", None)
     environment.update(extra)
@@ -151,7 +172,7 @@ class InstallTests(unittest.TestCase):
             self.assertEqual(env_text.count("CODEX_SESSIONS_DIR="), 1)
 
             bin_dir = os.path.join(home, "bin")
-            os.makedirs(bin_dir)
+            os.makedirs(bin_dir, exist_ok=True)
             uname_path = os.path.join(bin_dir, "uname")
             with open(uname_path, "w", encoding="utf-8") as handle:
                 handle.write(
@@ -197,6 +218,103 @@ class InstallTests(unittest.TestCase):
             self.assertIn("<key>CODEX_SESSIONS_DIR</key>", plist_text)
             self.assertIn("<string>" + codex_dir + "</string>", plist_text)
             self.assertIn("<key>T3_DONE_CONFIG_DIR</key>", plist_text)
+
+    def test_systemd_paths_escape_percent(self):
+        with tempfile.TemporaryDirectory() as home:
+            config_home = os.path.join(home, "xdg config %h")
+            config_dir = os.path.join(config_home, "t3-done")
+            claude_dir = os.path.join(home, "claude projects %h")
+            codex_dir = os.path.join(home, "codex sessions %h")
+            environment = install_env(
+                home,
+                WEBHOOK_URL="https://hooks.example.invalid/notify",
+                WEBHOOK_KEY="test-webhook-key",
+                T3_DONE_SOURCES="claude,codex",
+                XDG_CONFIG_HOME=config_home,
+                CLAUDE_PROJECTS_DIR="~/claude projects %h",
+                CODEX_SESSIONS_DIR="codex sessions %h",
+            )
+            installed = subprocess.run(
+                [INSTALL, "--non-interactive", "--no-service"],
+                cwd=home,
+                env=environment,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(installed.returncode, 0, installed.stderr)
+
+            env_file = os.path.join(config_dir, "env")
+            dropin = os.path.join(
+                config_home, "systemd", "user",
+                "t3-done-notify.service.d", "config.conf",
+            )
+            unit = os.path.join(config_home, "systemd", "user", "t3-done-notify.service")
+            with open(env_file, encoding="utf-8") as handle:
+                env_text = handle.read()
+            with open(dropin, encoding="utf-8") as handle:
+                dropin_text = handle.read()
+            with open(unit, encoding="utf-8") as handle:
+                unit_text = handle.read()
+
+            self.assertIn("CLAUDE_PROJECTS_DIR=" + claude_dir, env_text)
+            self.assertIn("CODEX_SESSIONS_DIR=" + codex_dir, env_text)
+            self.assertIn(
+                'Environment="T3_DONE_CONFIG_DIR=' + config_dir.replace("%", "%%") + '"',
+                dropin_text,
+            )
+            self.assertIn(
+                'Environment="CLAUDE_PROJECTS_DIR=' + claude_dir.replace("%", "%%") + '"',
+                dropin_text,
+            )
+            self.assertIn(
+                'Environment="CODEX_SESSIONS_DIR=' + codex_dir.replace("%", "%%") + '"',
+                dropin_text,
+            )
+            self.assertIn(
+                "ExecStart=%h/.local/share/t3-done-notify/.venv/bin/python "
+                "%h/.local/share/t3-done-notify/t3_done_notify.py",
+                unit_text,
+            )
+
+            bin_dir = os.path.join(home, "darwin-bin")
+            os.makedirs(bin_dir)
+            uname_path = os.path.join(bin_dir, "uname")
+            with open(uname_path, "w", encoding="utf-8") as handle:
+                handle.write(
+                    "#!/bin/sh\n"
+                    "if [ \"$1\" = \"-s\" ]; then\n"
+                    "  printf '%s\\n' Darwin\n"
+                    "else\n"
+                    "  exec /usr/bin/uname \"$@\"\n"
+                    "fi\n"
+                )
+            os.chmod(uname_path, 0o755)
+            darwin_environment = install_env(
+                home,
+                WEBHOOK_URL="https://hooks.example.invalid/notify",
+                WEBHOOK_KEY="test-webhook-key",
+                T3_DONE_SOURCES="claude,codex",
+                XDG_CONFIG_HOME=config_home,
+            )
+            darwin_environment["PATH"] = (
+                bin_dir + os.pathsep + darwin_environment.get("PATH", "")
+            )
+            darwin = subprocess.run(
+                [INSTALL, "--non-interactive", "--no-service"],
+                cwd=home,
+                env=darwin_environment,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(darwin.returncode, 0, darwin.stderr)
+            plist = os.path.join(home, "Library", "LaunchAgents", "com.t3-done-notify.plist")
+            with open(plist, encoding="utf-8") as handle:
+                plist_text = handle.read()
+            self.assertIn("<string>" + config_dir + "</string>", plist_text)
+            self.assertIn("<string>" + claude_dir + "</string>", plist_text)
+            self.assertIn("<string>" + codex_dir + "</string>", plist_text)
 
 
 if __name__ == "__main__":

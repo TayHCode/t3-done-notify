@@ -215,6 +215,10 @@ xml_escape() {
   printf '%s' "$1" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'
 }
 
+systemd_escape_percent() {
+  printf '%s' "$1" | sed 's/%/%%/g'
+}
+
 write_launchd_plist() {
   dest=$1
   python=$2
@@ -448,14 +452,17 @@ chmod 600 "$env_file"
 unit_dir="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
 mkdir -p "$unit_dir/t3-done-notify.service.d"
 install -m 644 "$root/t3-done-notify.service" "$unit_dir/t3-done-notify.service"
+systemd_config_dir=$(systemd_escape_percent "$config_dir")
+systemd_claude_projects_dir=$(systemd_escape_percent "$claude_projects_dir")
+systemd_codex_sessions_dir=$(systemd_escape_percent "$codex_sessions_dir")
 {
   printf '%s\n' "[Service]"
-  printf 'Environment="%s=%s"\n' T3_DONE_CONFIG_DIR "$config_dir"
+  printf 'Environment="%s=%s"\n' T3_DONE_CONFIG_DIR "$systemd_config_dir"
   if [ -n "$claude_projects_dir" ]; then
-    printf 'Environment="%s=%s"\n' CLAUDE_PROJECTS_DIR "$claude_projects_dir"
+    printf 'Environment="%s=%s"\n' CLAUDE_PROJECTS_DIR "$systemd_claude_projects_dir"
   fi
   if [ -n "$codex_sessions_dir" ]; then
-    printf 'Environment="%s=%s"\n' CODEX_SESSIONS_DIR "$codex_sessions_dir"
+    printf 'Environment="%s=%s"\n' CODEX_SESSIONS_DIR "$systemd_codex_sessions_dir"
   fi
 } > "$unit_dir/t3-done-notify.service.d/config.conf"
 chmod 644 "$unit_dir/t3-done-notify.service.d/config.conf"

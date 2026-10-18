@@ -4,6 +4,7 @@
 import argparse
 import copy
 import datetime as dt
+import hashlib
 import json
 import math
 import os
@@ -27,6 +28,8 @@ STOPPED_STATUSES = {
 }
 RETRY_DELAYS = (1, 2, 4, 8)
 SOURCE_NAMES = ("t3", "claude", "codex")
+SESSION_TAIL_BYTES = 16384
+RECENT_LOCAL_COMPLETIONS = 2048
 ATTENTION_PATTERN = re.compile(
     r"\b(blocked|approval|approve|permission|need(?:s)? (?:you|someone)|"
     r"please (?:confirm|approve)|yes/no|(?:can|could|would) you)\b|\?",
@@ -309,9 +312,11 @@ def load_state(path=None):
         path = load_config().state_file
     try:
         with open(path, encoding="utf-8") as handle:
-            return json.load(handle)
+            state = json.load(handle)
     except FileNotFoundError:
         return {}
+    _prune_local_sessions(state)
+    return state
 
 
 def save_state(state, path=None):
@@ -498,7 +503,16 @@ def _matches(watched_id, snap):
     return matches[0] if matches else None
 
 
-def _commit_observation(state, record, thread_id, payload, now, save_path, daybook_dir, watched_id=None):
+def _remember_local_completion(state, key):
+    # Bound tombstones for vanished transcripts; live records retain their last turn too.
+    recent = list(state.get("_local_completed") or [])
+    if key not in recent:
+        recent.append(key)
+    state["_local_completed"] = recent[-RECENT_LOCAL_COMPLETIONS:]
+
+
+def _commit_observation(state, record, thread_id, payload, now, save_path, daybook_dir, watched_id=None,
+                        completed_key=None):
     """Persist one observation. A failed daybook write leaves the previous state in place."""
     if payload:
         append_daybook(payload, daybook_dir)
@@ -506,9 +520,14 @@ def _commit_observation(state, record, thread_id, payload, now, save_path, daybo
     if watched_id is not None:
         candidate.pop(watched_id, None)
     candidate[thread_id] = record
+    if completed_key:
+        _remember_local_completion(candidate, completed_key)
     if payload and needs_attention(payload):
         candidate["_outbox"] = list(state.get("_outbox") or [])
-        candidate["_outbox"].append({"payload": payload, "queued_at": now})
+        queued = {"payload": payload, "queued_at": now}
+        if completed_key:
+            queued["completion_key"] = completed_key
+        candidate["_outbox"].append(queued)
     save_state(candidate, save_path)
     state.clear()
     state.update(candidate)
@@ -586,14 +605,19 @@ def _newer_session(left, right):
     return left
 
 
-def _session_thread(session_id, title, phase, updated, last_message, source):
+def _content_key(value):
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _session_thread(session_id, title, phase, updated, last_message, source, turn_key=None):
     status = {
         "running": "running",
         "completed": "completed",
         "failed": "failed",
         "interrupted": "interrupted",
     }.get(phase, "idle")
-    return {
+    thread = {
         "id": session_id,
         "title": title or session_id,
         "status": status,
@@ -602,6 +626,11 @@ def _session_thread(session_id, title, phase, updated, last_message, source):
         "source": source,
         "last_message": last_message,
     }
+    if turn_key:
+        thread["turn_key"] = _content_key([source, session_id, turn_key])
+        if phase in {"completed", "failed", "interrupted"}:
+            thread["completion_key"] = thread["turn_key"]
+    return thread
 
 
 def _claude_message_text(record):
@@ -668,6 +697,8 @@ def parse_claude_session(path):
     last_message = ""
     phase = "idle"
     pending_error = False
+    turn_key = None
+    terminal_key = None
     terminal_stops = {"end_turn", "stop_sequence", "max_tokens"}
 
     for record in records:
@@ -684,11 +715,14 @@ def parse_claude_session(path):
         elif kind == "summary" and record.get("summary") and not ai_title and not custom_title:
             ai_title = str(record["summary"])
         elif _claude_human_prompt(record):
+            turn_key = record.get("uuid") or _content_key(record)
+            terminal_key = None
             phase = "running"
             pending_error = False
             if not first_prompt:
                 first_prompt = _one_line(_claude_message_text(record))
         elif kind == "assistant":
+            terminal_key = record.get("uuid") or _content_key(record)
             text = _plain_text(_claude_message_text(record))
             if text:
                 last_message = text
@@ -709,9 +743,11 @@ def parse_claude_session(path):
         elif kind == "system":
             subtype = record.get("subtype")
             if subtype == "turn_duration":
+                terminal_key = terminal_key or _content_key(record)
                 phase = "completed"
                 pending_error = False
             elif subtype == "api_error" and str(record.get("level", "")).lower() == "error":
+                terminal_key = _content_key(record)
                 pending_error = True
                 phase = "running"
                 text = _error_text(record.get("error"))
@@ -727,7 +763,8 @@ def parse_claude_session(path):
     if not updated:
         updated = _mtime_stamp(path)
     title = custom_title or ai_title or first_prompt
-    return _session_thread(session_id, title, phase, updated, last_message, "claude")
+    return _session_thread(session_id, title, phase, updated, last_message, "claude",
+                           turn_key or terminal_key)
 
 
 def _codex_id_from_name(name):
@@ -778,6 +815,8 @@ def parse_codex_session(path):
     updated = ""
     last_message = ""
     phase = "idle"
+    turn_key = None
+    turn_id = None
 
     for record in records:
         timestamp = record.get("timestamp")
@@ -790,8 +829,12 @@ def parse_codex_session(path):
         elif kind == "event_msg":
             event_name = str(payload.get("type") or "")
             if event_name in {"task_started", "turn_started"}:
+                turn_id = payload.get("turn_id")
+                turn_key = turn_id or _content_key(record)
                 phase = "running"
             elif event_name in {"task_complete", "turn_complete"}:
+                turn_id = payload.get("turn_id") or turn_id
+                turn_key = turn_id or turn_key or _content_key(record)
                 agent_message = payload.get("last_agent_message")
                 if isinstance(agent_message, str):
                     text = _plain_text(agent_message)
@@ -806,22 +849,34 @@ def parse_codex_session(path):
                 else:
                     phase = "completed"
             elif event_name == "turn_aborted":
+                turn_id = payload.get("turn_id") or turn_id
+                turn_key = turn_id or turn_key or _content_key(record)
                 if payload.get("reason") == "budget_limited":
                     phase = "failed"
                     if not last_message:
                         last_message = "budget limited"
                 else:
                     phase = "interrupted"
-            elif event_name == "user_message" and not title:
-                title = _codex_title_from_user(payload.get("message") or "")
+            elif event_name == "user_message":
+                if phase != "running":
+                    turn_id = None
+                turn_key = turn_id or _content_key(record)
+                phase = "running"
+                if not title:
+                    title = _codex_title_from_user(payload.get("message") or "")
             elif event_name == "agent_message":
                 text = _plain_text(payload.get("message") or "")
                 if text and payload.get("phase") in {None, "final_answer"}:
                     last_message = text
         elif kind == "response_item":
             item = str(payload.get("type") or "")
-            if item == "message" and payload.get("role") == "user" and not title:
-                title = _codex_title_from_user(_block_text(payload.get("content")))
+            if item == "message" and payload.get("role") == "user":
+                if phase != "running":
+                    turn_id = None
+                turn_key = turn_id or _content_key(record)
+                phase = "running"
+                if not title:
+                    title = _codex_title_from_user(_block_text(payload.get("content")))
             elif item == "message" and payload.get("role") == "assistant":
                 text = _plain_text(_block_text(payload.get("content")))
                 if text:
@@ -836,7 +891,7 @@ def parse_codex_session(path):
         session_id = _codex_id_from_name(os.path.basename(path))
     if not updated:
         updated = _mtime_stamp(path)
-    return _session_thread(session_id, title, phase, updated, last_message, "codex")
+    return _session_thread(session_id, title, phase, updated, last_message, "codex", turn_key)
 
 
 def _read_session(path, parser):
@@ -851,13 +906,16 @@ def _read_session(path, parser):
 
 
 def _read_stable_session(path, parser):
-    """Read a session file and the size and mtime from before that read.
+    """Parse a stable file and fingerprint its tail, independent of inode/mtime.
 
     A file that changes while it is being read is left for the next poll, so
     the stored offset is never ahead of the bytes that were parsed.
     """
     try:
         before = os.stat(path)
+        with open(path, "rb") as handle:
+            handle.seek(max(0, before.st_size - SESSION_TAIL_BYTES))
+            fingerprint = hashlib.sha256(handle.read()).hexdigest()
     except OSError:
         print("session read failed", flush=True)
         return ("missing",)
@@ -867,12 +925,15 @@ def _read_stable_session(path, parser):
     except OSError:
         print("session read failed", flush=True)
         return ("missing",)
-    if after.st_mtime_ns != before.st_mtime_ns or after.st_size != before.st_size:
+    if any(getattr(after, field) != getattr(before, field) for field in (
+        "st_mtime_ns", "st_ctime_ns", "st_size", "st_dev", "st_ino"
+    )):
         return ("unstable",)
     return ("ok", parsed, {
         "path": path,
         "mtime_ns": before.st_mtime_ns,
         "offset": before.st_size,
+        "fingerprint": fingerprint,
     })
 
 
@@ -972,38 +1033,96 @@ def _signature_changed(previous, signature):
     if not isinstance(previous, dict):
         return True
     return (
-        previous.get("mtime_ns") != signature["mtime_ns"]
-        or previous.get("offset") != signature["offset"]
+        previous.get("offset") != signature["offset"]
+        or (previous.get("fingerprint") is not None
+            and previous["fingerprint"] != signature["fingerprint"])
     )
 
 
-def _index_entry(signature, session_id):
+def _index_entry(signature, session_id, completion_key=None):
     return {
         "mtime_ns": signature["mtime_ns"],
         "offset": signature["offset"],
         "id": session_id,
+        "fingerprint": signature["fingerprint"],
+        "completion_key": completion_key,
     }
 
 
+def _path_missing(path):
+    try:
+        os.stat(path)
+    except FileNotFoundError:
+        return True
+    except OSError:
+        pass  # An inaccessible file is not evidence that its session is gone.
+    return False
+
+
+def _prune_local_sessions(state):
+    """Drop absent transcripts and their local records, never T3 thread state.
+
+    The file index also identifies records written before source/path metadata
+    was added. Recent completion hashes and queued deliveries survive pruning.
+    """
+    index = state.get("_files")
+    paths_by_id = {}
+    if isinstance(index, dict):
+        for path, entry in index.items():
+            if isinstance(entry, dict) and entry.get("id"):
+                paths_by_id.setdefault(entry["id"], set()).add(path)
+        state["_files"] = {
+            path: entry for path, entry in index.items() if not _path_missing(path)
+        }
+    for session_id, record in list(state.items()):
+        if not isinstance(record, dict) or session_id.startswith(("_", "thread:")):
+            continue
+        if record.get("source") == "t3":
+            continue
+        paths = paths_by_id.get(session_id, set())
+        if record.get("source") in {"claude", "codex"}:
+            paths.update(record.get("transcript_paths") or [])
+        if paths and all(_path_missing(path) for path in paths):
+            key = record.get("completed_turn")
+            if not key and record.get("last_fired"):
+                key = _content_key([session_id, record["last_fired"]])
+            if key:
+                _remember_local_completion(state, key)
+            del state[session_id]
+
+
 def _track_files(state, observations, loose, unstable):
-    """Remember each file's mtime and byte offset. The first index is a baseline."""
+    """Remember content signatures. The first index is a baseline."""
     previous_index = state.get("_files")
     seeding = not isinstance(previous_index, dict)
     if seeding:
         previous_index = {}
     seen = {}
     changed = set()
+    previous_by_id = {}
+    for entry in previous_index.values():
+        previous_by_id.setdefault(entry.get("id"), []).append(entry)
     for item in observations:
         session_id = item["thread"]["id"]
+        completion_key = item["thread"].get("completion_key")
         session_changed = False
+        prior_files = previous_by_id.get(session_id, [])
         for signature in item["files"]:
-            seen[signature["path"]] = _index_entry(signature, session_id)
-            if _signature_changed(previous_index.get(signature["path"]), signature):
+            seen[signature["path"]] = _index_entry(signature, session_id, completion_key)
+            previous = previous_index.get(signature["path"])
+            if previous is None:
+                previous = next((entry for entry in prior_files
+                                 if not _signature_changed(entry, signature)), None)
+            if _signature_changed(previous, signature):
                 session_changed = True
+        if completion_key and any(entry.get("completion_key") == completion_key
+                                  for entry in prior_files):
+            session_changed = False
         if session_changed:
             changed.add(session_id)
     for signature in loose:
-        seen[signature["path"]] = _index_entry(signature, "")
+        previous = previous_index.get(signature["path"], {})
+        seen[signature["path"]] = _index_entry(signature, previous.get("id", ""))
     for path in unstable:
         previous = previous_index.get(path)
         if isinstance(previous, dict):
@@ -1041,7 +1160,7 @@ def poll_local_sessions(
 ):
     """Apply Claude Code and Codex transcripts through the T3 transition rules.
 
-    Discovered files are indexed by path, mtime, and size. Files already
+    Discovered files are indexed by path, content fingerprint, and size. Files already
     finished when that index is first written are not new completions. A file
     that appears or grows on a later poll is, including a session that started
     and finished between polls. Passing ``sessions`` skips the index and keeps
@@ -1056,16 +1175,35 @@ def poll_local_sessions(
     use_index = sessions is None
     seeding = False
     changed = set()
+    paths_by_id = {}
     if use_index:
+        _prune_local_sessions(state)
         observations, loose, unstable = _discover_observations(config)
         sessions = [item["thread"] for item in observations]
+        paths_by_id = {item["thread"]["id"]: [entry["path"] for entry in item["files"]]
+                       for item in observations}
         seeding, changed = _track_files(state, observations, loose, unstable)
+    completed = set(state.get("_local_completed") or [])
+    completed.update(item["completion_key"] for item in state.get("_outbox", [])
+                     if item.get("completion_key"))
+    completed.update(_content_key([
+        item["payload"]["thread_id"],
+        item["payload"]["reason"] + ":" + str(item["payload"]["updated_at"]),
+    ]) for item in state.get("_outbox", [])
+        if not item.get("completion_key")
+        and item["payload"].get("source") in {"claude", "codex"})
     committed = False
     try:
         for thread in sessions:
             thread_id = thread["id"]
             previous_record = state.get(thread_id)
             tracked = isinstance(previous_record, dict)
+            completion_key = thread.get("completion_key")
+            turn_key = thread.get("turn_key")
+            already_completed = turn_key and (
+                turn_key in completed
+                or (tracked and previous_record.get("completed_turn") == turn_key)
+            )
             if not tracked and not active(thread):
                 if not use_index or seeding or thread_id not in changed:
                     continue
@@ -1079,19 +1217,42 @@ def poll_local_sessions(
                     and not active(thread)
                     and not record.get("active")
                 ):
-                    record = {"active": True}
-            payload = transition(
-                record,
-                thread,
-                now,
-                debounce_seconds=config.debounce_seconds,
-                stall_seconds=config.stall_seconds,
-            )
+                    record["active"] = True
+            # Migrate delivered completions from the pre-fingerprint state format.
+            reason = "error" if thread.get("status") == "failed" else "done"
+            fired = reason + ":" + thread.get("updatedAt", "")
+            if completion_key and (
+                (not record.get("completed_turn") and record.get("last_fired") == fired)
+                or _content_key([thread_id, fired]) in completed
+            ):
+                already_completed = True
+            if already_completed:
+                record.update(active=False, pending_since=None, pending_status=None)
+                payload = None
+            else:
+                payload = transition(
+                    record,
+                    thread,
+                    now,
+                    debounce_seconds=config.debounce_seconds,
+                    stall_seconds=config.stall_seconds,
+                )
             if payload:
                 payload["last_message"] = thread.get("last_message") or ""
+            remembered_key = completion_key if (
+                already_completed or (payload and payload["reason"] in {"done", "error"})
+            ) else None
+            if remembered_key:
+                record["completed_turn"] = remembered_key
+            if use_index:
+                record["source"] = thread["source"]
+                record["transcript_paths"] = paths_by_id[thread_id]
             _commit_observation(
-                state, record, thread_id, payload, now, save_path, daybook_dir
+                state, record, thread_id, payload, now, save_path, daybook_dir,
+                completed_key=remembered_key,
             )
+            if remembered_key:
+                completed.add(remembered_key)
             committed = True
     except Exception:
         flush_outbox(state, environment, now, save_path, dry_run=dry_run)
