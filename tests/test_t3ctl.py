@@ -94,14 +94,14 @@ class ConfigTests(unittest.TestCase):
 
 class HttpTests(unittest.TestCase):
     def run_server(self, handler_type):
-        server = HTTPServer(("localhost", 0), handler_type)
+        server = HTTPServer(("127.0.0.1", 0), handler_type)
         worker = threading.Thread(target=server.serve_forever, daemon=True)
         worker.start()
         return server, worker
 
     def with_token_and_url(self, token_path, server):
         return mock.patch.dict(os.environ, {
-            "T3_URL": f"http://localhost:{server.server_port}",
+            "T3_URL": f"http://127.0.0.1:{server.server_port}",
             "T3_TOKEN_FILE": token_path,
         })
 
@@ -158,7 +158,7 @@ class HttpTests(unittest.TestCase):
                 self.assertEqual(error_text, "T3 authentication failed")
                 self.assertNotIn("unit-test-token", error_text)
                 self.assertNotIn("private-response-body", error_text)
-                self.assertNotIn("localhost", error_text)
+                self.assertNotIn("127.0.0.1", error_text)
         finally:
             server.shutdown()
             worker.join()
@@ -171,7 +171,7 @@ class HttpTests(unittest.TestCase):
             def do_POST(self):
                 hits.append(self.path)
                 self.send_response(302)
-                self.send_header("Location", f"http://localhost:{self.server.server_port}/redirect-target")
+                self.send_header("Location", f"http://127.0.0.1:{self.server.server_port}/redirect-target")
                 self.end_headers()
 
             def log_message(self, *_):
@@ -188,7 +188,7 @@ class HttpTests(unittest.TestCase):
                         t3ctl.websocket_ticket()
                 self.assertEqual(str(raised.exception), "T3 ticket redirect refused")
                 self.assertEqual(hits, ["/api/auth/websocket-ticket"])
-                self.assertNotIn("localhost", str(raised.exception))
+                self.assertNotIn("127.0.0.1", str(raised.exception))
         finally:
             server.shutdown()
             worker.join()
@@ -211,9 +211,9 @@ class HttpTests(unittest.TestCase):
                 for _ in range(3):
                     await websocket.recv()
 
-            async with serve(handler, "localhost", 0, process_request=process_request, family=socket.AF_INET) as server:
+            async with serve(handler, "127.0.0.1", 0, process_request=process_request, family=socket.AF_INET) as server:
                 port = server.sockets[0].getsockname()[1]
-                with mock.patch.dict(os.environ, {"T3_URL": f"http://localhost:{port}"}), \
+                with mock.patch.dict(os.environ, {"T3_URL": f"http://127.0.0.1:{port}"}), \
                         mock.patch.object(t3ctl, "websocket_ticket", return_value="synthetic-ticket"):
                     result = await t3ctl.shell_snapshot()
             return result, seen
@@ -239,9 +239,9 @@ class HttpTests(unittest.TestCase):
             async def handler(websocket):
                 raise AssertionError("redirect response must prevent websocket upgrade")
 
-            async with serve(handler, "localhost", 0, process_request=process_request, family=socket.AF_INET) as server:
+            async with serve(handler, "127.0.0.1", 0, process_request=process_request, family=socket.AF_INET) as server:
                 port = server.sockets[0].getsockname()[1]
-                with mock.patch.dict(os.environ, {"T3_URL": f"http://localhost:{port}"}), \
+                with mock.patch.dict(os.environ, {"T3_URL": f"http://127.0.0.1:{port}"}), \
                         mock.patch.object(t3ctl, "websocket_ticket", return_value="synthetic-ticket"):
                     try:
                         await t3ctl.shell_snapshot()
